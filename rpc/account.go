@@ -1,6 +1,10 @@
 package rpc
 
-import "math/big"
+import (
+	"errors"
+	"math/big"
+	"strconv"
+)
 
 // AccountBalance returns how many RAW is owned and how many have not yet been received by account.
 func (c *Client) AccountBalance(account string) (balance, pending *big.Int, err error) {
@@ -23,10 +27,7 @@ func (c *Client) AccountBlockCount(account string) (blockCount uint64, err error
 	if err != nil {
 		return
 	}
-	if blockCount, err = toUint(resp["block_count"]); err != nil {
-		return
-	}
-	return
+	return toUint(resp["block_count"])
 }
 
 // AccountGet gets the account number for the public key.
@@ -35,7 +36,38 @@ func (c *Client) AccountGet(key string) (account string, err error) {
 	if err != nil {
 		return
 	}
-	account = resp["account"]
+	return toStr(resp["account"])
+}
+
+// AccountHistory reports send/receive information for an account.
+func (c *Client) AccountHistory(account string, count uint64) (history []History, previous string, err error) {
+	resp, err := c.send(map[string]string{
+		"action":  "account_history",
+		"account": account,
+		"count":   strconv.FormatUint(count, 10),
+	})
+	if err != nil {
+		return
+	}
+	h, ok := resp["history"].([]interface{})
+	if !ok {
+		err = errors.New("failed to cast history array")
+		return
+	}
+	history = make([]History, len(h))
+	for i, h := range h {
+		h, ok := h.(map[string]interface{})
+		if !ok {
+			err = errors.New("failed to cast history array")
+			return
+		}
+		if err = history[i].parse(h); err != nil {
+			return
+		}
+	}
+	if previous, err = toStr(resp["previous"]); err != nil {
+		return
+	}
 	return
 }
 
@@ -45,8 +77,7 @@ func (c *Client) AccountKey(account string) (key string, err error) {
 	if err != nil {
 		return
 	}
-	key = resp["key"]
-	return
+	return toStr(resp["key"])
 }
 
 // AccountRepresentative returns the representative for account.
@@ -55,8 +86,7 @@ func (c *Client) AccountRepresentative(account string) (representative string, e
 	if err != nil {
 		return
 	}
-	representative = resp["representative"]
-	return
+	return toStr(resp["representative"])
 }
 
 // AccountWeight returns the voting weight for account.
@@ -65,8 +95,5 @@ func (c *Client) AccountWeight(account string) (weight *big.Int, err error) {
 	if err != nil {
 		return
 	}
-	if weight, err = toBig(resp["weight"]); err != nil {
-		return
-	}
-	return
+	return toBig(resp["weight"])
 }

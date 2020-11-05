@@ -6,14 +6,31 @@ import (
 	"strconv"
 )
 
-func toUint(s string) (uint64, error) {
-	return strconv.ParseUint(s, 10, 64)
+func toStr(x interface{}) (s string, err error) {
+	s, ok := x.(string)
+	if !ok {
+		err = errors.New("failed to cast to string")
+	}
+	return
 }
 
-func toBig(s string) (*big.Int, error) {
-	var x big.Int
-	if _, ok := x.SetString(s, 10); !ok {
-		return nil, errors.New("failed to parse big number: " + s)
+func toUint(x interface{}) (v uint64, err error) {
+	s, err := toStr(x)
+	if err != nil {
+		return
 	}
-	return &x, nil
+	v, err = strconv.ParseUint(s, 10, 64)
+	return
+}
+
+func toBig(x interface{}) (z *big.Int, err error) {
+	s, err := toStr(x)
+	if err != nil {
+		return
+	}
+	z = new(big.Int)
+	if _, ok := z.SetString(s, 10); !ok {
+		err = errors.New("failed to parse big number: " + s)
+	}
+	return
 }
