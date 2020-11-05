@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"time"
 )
 
 func toStr(x interface{}) (s string, err error) {
@@ -33,5 +34,14 @@ func toBig(x interface{}) (z *big.Int, err error) {
 	if _, ok := z.SetString(s, 10); !ok {
 		err = errors.New("failed to parse big number: " + s)
 	}
+	return
+}
+
+func toTime(x interface{}) (t time.Time, err error) {
+	v, err := toUint(x)
+	if err != nil {
+		return
+	}
+	t = time.Unix(int64(v), 0).UTC()
 	return
 }

@@ -1,13 +1,16 @@
 package rpc
 
-import "math/big"
+import (
+	"math/big"
+	"time"
+)
 
 // AccountHistory reports send/receive information within a block.
 type AccountHistory struct {
 	Type           string
 	Account        string
 	Amount         *big.Int
-	LocalTimestamp uint64
+	LocalTimestamp time.Time
 	Height         uint64
 	Hash           string
 }
@@ -22,7 +25,7 @@ func (h *AccountHistory) parse(x map[string]interface{}) (err error) {
 	if h.Amount, err = toBig(x["amount"]); err != nil {
 		return
 	}
-	if h.LocalTimestamp, err = toUint(x["local_timestamp"]); err != nil {
+	if h.LocalTimestamp, err = toTime(x["local_timestamp"]); err != nil {
 		return
 	}
 	if h.Height, err = toUint(x["height"]); err != nil {

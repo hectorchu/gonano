@@ -3,6 +3,7 @@ package rpc_test
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/hectorchu/gonano/rpc"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +33,7 @@ func TestAccountHistory(t *testing.T) {
 	var x big.Int
 	x.SetString("100000000000000000000000000", 10)
 	assert.Equal(t, &x, h.Amount)
-	assert.Equal(t, uint64(1604610080), h.LocalTimestamp)
+	assert.Equal(t, time.Date(2020, time.November, 5, 21, 1, 20, 0, time.UTC), h.LocalTimestamp)
 	assert.Equal(t, uint64(3), h.Height)
 	assert.Equal(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", h.Hash)
 	assert.Equal(t, "CEC5287A00F5A50E11A80EC3A63C575D37BFD5BAD87BCB1B7E46DBCBE2F1EC3E", previous)
@@ -47,7 +48,7 @@ func TestAccountInfo(t *testing.T) {
 	var x big.Int
 	x.SetString("134000000000000000000000000", 10)
 	assert.Equal(t, &x, i.Balance)
-	assert.Equal(t, uint64(1604610080), i.ModifiedTimestamp)
+	assert.Equal(t, time.Date(2020, time.November, 5, 21, 1, 20, 0, time.UTC), i.ModifiedTimestamp)
 	assert.Equal(t, uint64(3), i.BlockCount)
 	assert.Equal(t, uint64(2), i.AccountVersion)
 	assert.Equal(t, uint64(3), i.ConfirmationHeight)
