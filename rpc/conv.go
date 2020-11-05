@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 )
@@ -9,7 +10,7 @@ import (
 func toStr(x interface{}) (s string, err error) {
 	s, ok := x.(string)
 	if !ok {
-		err = errors.New("failed to cast to string")
+		err = fmt.Errorf("failed to cast to string: %v", x)
 	}
 	return
 }

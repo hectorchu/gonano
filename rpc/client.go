@@ -29,5 +29,11 @@ func (c *Client) send(body map[string]string) (result map[string]interface{}, er
 			err = errors.New(s)
 		}
 	}
+	if v, ok := result["message"]; ok {
+		var s string
+		if s, err = toStr(v); err == nil {
+			err = errors.New(s)
+		}
+	}
 	return
 }
