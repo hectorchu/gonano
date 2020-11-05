@@ -24,7 +24,7 @@ func TestAccountBalance(t *testing.T) {
 }
 
 func TestAccountHistory(t *testing.T) {
-	history, previous, err := getClient().AccountHistory("nano_1zcffp784drsmz4oksufxfjut1nb5yh6pg43a6h6bkos39zz19ed6a4r36ny", 1)
+	history, previous, err := getClient().AccountHistory("nano_1zcffp784drsmz4oksufxfjut1nb5yh6pg43a6h6bkos39zz19ed6a4r36ny", 1, "")
 	require.Nil(t, err)
 	require.Len(t, history, 1)
 	h := history[0]

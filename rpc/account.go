@@ -40,12 +40,16 @@ func (c *Client) AccountGet(key string) (account string, err error) {
 }
 
 // AccountHistory reports send/receive information for an account.
-func (c *Client) AccountHistory(account string, count int64) (history []AccountHistory, previous string, err error) {
-	resp, err := c.send(map[string]string{
+func (c *Client) AccountHistory(account string, count int64, head string) (history []AccountHistory, previous string, err error) {
+	body := map[string]string{
 		"action":  "account_history",
 		"account": account,
 		"count":   strconv.FormatInt(count, 10),
-	})
+	}
+	if head != "" {
+		body["head"] = head
+	}
+	resp, err := c.send(body)
 	if err != nil {
 		return
 	}
