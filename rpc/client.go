@@ -3,6 +3,7 @@ package rpc
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -22,5 +23,8 @@ func (c *Client) send(body map[string]string) (result map[string]string, err err
 	defer resp.Body.Close()
 	dec := json.NewDecoder(resp.Body)
 	dec.Decode(&result)
+	if v, ok := result["error"]; ok {
+		err = errors.New(v)
+	}
 	return
 }
