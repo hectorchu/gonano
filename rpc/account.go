@@ -40,7 +40,7 @@ func (c *Client) AccountGet(key string) (account string, err error) {
 }
 
 // AccountHistory reports send/receive information for an account.
-func (c *Client) AccountHistory(account string, count int64) (history []History, previous string, err error) {
+func (c *Client) AccountHistory(account string, count int64) (history []AccountHistory, previous string, err error) {
 	resp, err := c.send(map[string]string{
 		"action":  "account_history",
 		"account": account,
@@ -54,7 +54,7 @@ func (c *Client) AccountHistory(account string, count int64) (history []History,
 		err = errors.New("failed to cast history array")
 		return
 	}
-	history = make([]History, len(h))
+	history = make([]AccountHistory, len(h))
 	for i, h := range h {
 		h, ok := h.(map[string]interface{})
 		if !ok {
@@ -68,6 +68,18 @@ func (c *Client) AccountHistory(account string, count int64) (history []History,
 	if previous, err = toStr(resp["previous"]); err != nil {
 		return
 	}
+	return
+}
+
+// AccountInfo returns frontier, open block, change representative block,
+// balance, last modified timestamp from local database & block count for
+// account.
+func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
+	resp, err := c.send(map[string]string{"action": "account_info", "account": account})
+	if err != nil {
+		return
+	}
+	err = info.parse(resp)
 	return
 }
 

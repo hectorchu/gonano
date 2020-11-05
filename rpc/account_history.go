@@ -2,8 +2,8 @@ package rpc
 
 import "math/big"
 
-// History reports send/receive information within a block.
-type History struct {
+// AccountHistory reports send/receive information within a block.
+type AccountHistory struct {
 	Type           string
 	Account        string
 	Amount         *big.Int
@@ -12,7 +12,7 @@ type History struct {
 	Hash           string
 }
 
-func (h *History) parse(x map[string]interface{}) (err error) {
+func (h *AccountHistory) parse(x map[string]interface{}) (err error) {
 	if h.Type, err = toStr(x["type"]); err != nil {
 		return
 	}
