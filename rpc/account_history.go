@@ -12,7 +12,7 @@ type AccountHistory struct {
 	Amount         *big.Int
 	LocalTimestamp time.Time
 	Height         uint64
-	Hash           string
+	Hash           []byte
 }
 
 func (h *AccountHistory) parse(x map[string]interface{}) (err error) {
@@ -31,7 +31,7 @@ func (h *AccountHistory) parse(x map[string]interface{}) (err error) {
 	if h.Height, err = toUint(x["height"]); err != nil {
 		return
 	}
-	if h.Hash, err = toStr(x["hash"]); err != nil {
+	if h.Hash, err = toBytes(x["hash"]); err != nil {
 		return
 	}
 	return
@@ -42,17 +42,17 @@ func (h *AccountHistory) parse(x map[string]interface{}) (err error) {
 type AccountHistoryRaw struct {
 	Type           string
 	Representative string
-	Link           string
+	Link           []byte
 	Balance        *big.Int
-	Previous       string
+	Previous       []byte
 	Subtype        string
 	Account        string
 	Amount         *big.Int
 	LocalTimestamp time.Time
 	Height         uint64
-	Hash           string
-	Work           string
-	Signature      string
+	Hash           []byte
+	Work           []byte
+	Signature      []byte
 }
 
 func (h *AccountHistoryRaw) parse(x map[string]interface{}) (err error) {
@@ -62,13 +62,13 @@ func (h *AccountHistoryRaw) parse(x map[string]interface{}) (err error) {
 	if h.Representative, err = toStr(x["representative"]); err != nil {
 		return
 	}
-	if h.Link, err = toStr(x["link"]); err != nil {
+	if h.Link, err = toBytes(x["link"]); err != nil {
 		return
 	}
 	if h.Balance, err = toBig(x["balance"]); err != nil {
 		return
 	}
-	if h.Previous, err = toStr(x["previous"]); err != nil {
+	if h.Previous, err = toBytes(x["previous"]); err != nil {
 		return
 	}
 	if h.Subtype, err = toStr(x["subtype"]); err != nil {
@@ -86,13 +86,13 @@ func (h *AccountHistoryRaw) parse(x map[string]interface{}) (err error) {
 	if h.Height, err = toUint(x["height"]); err != nil {
 		return
 	}
-	if h.Hash, err = toStr(x["hash"]); err != nil {
+	if h.Hash, err = toBytes(x["hash"]); err != nil {
 		return
 	}
-	if h.Work, err = toStr(x["work"]); err != nil {
+	if h.Work, err = toBytes(x["work"]); err != nil {
 		return
 	}
-	if h.Signature, err = toStr(x["signature"]); err != nil {
+	if h.Signature, err = toBytes(x["signature"]); err != nil {
 		return
 	}
 	return

@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -44,4 +45,12 @@ func toTime(x interface{}) (t time.Time, err error) {
 	}
 	t = time.Unix(int64(v), 0).UTC()
 	return
+}
+
+func toBytes(x interface{}) (b []byte, err error) {
+	s, err := toStr(x)
+	if err != nil {
+		return
+	}
+	return hex.DecodeString(s)
 }

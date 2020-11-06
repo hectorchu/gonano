@@ -39,7 +39,7 @@ func (c *Client) AccountGet(key string) (account string, err error) {
 }
 
 // AccountHistory reports send/receive information for an account.
-func (c *Client) AccountHistory(account string, count int64, head string) (history []AccountHistory, previous string, err error) {
+func (c *Client) AccountHistory(account string, count int64, head string) (history []AccountHistory, previous []byte, err error) {
 	body := map[string]interface{}{"action": "account_history", "account": account, "count": count}
 	if head != "" {
 		body["head"] = head
@@ -65,7 +65,7 @@ func (c *Client) AccountHistory(account string, count int64, head string) (histo
 		}
 	}
 	if v, ok := resp["previous"]; ok {
-		if previous, err = toStr(v); err != nil {
+		if previous, err = toBytes(v); err != nil {
 			return
 		}
 	}
@@ -74,7 +74,7 @@ func (c *Client) AccountHistory(account string, count int64, head string) (histo
 
 // AccountHistoryRaw reports all parameters of the block itself as seen in
 // BlockCreate or other APIs returning blocks.
-func (c *Client) AccountHistoryRaw(account string, count int64, head string) (history []AccountHistoryRaw, previous string, err error) {
+func (c *Client) AccountHistoryRaw(account string, count int64, head string) (history []AccountHistoryRaw, previous []byte, err error) {
 	body := map[string]interface{}{"action": "account_history", "account": account, "count": count, "raw": true}
 	if head != "" {
 		body["head"] = head
@@ -100,7 +100,7 @@ func (c *Client) AccountHistoryRaw(account string, count int64, head string) (hi
 		}
 	}
 	if v, ok := resp["previous"]; ok {
-		if previous, err = toStr(v); err != nil {
+		if previous, err = toBytes(v); err != nil {
 			return
 		}
 	}
@@ -120,12 +120,12 @@ func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
 }
 
 // AccountKey gets the public key for account.
-func (c *Client) AccountKey(account string) (key string, err error) {
+func (c *Client) AccountKey(account string) (key []byte, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "account_key", "account": account})
 	if err != nil {
 		return
 	}
-	return toStr(resp["key"])
+	return toBytes(resp["key"])
 }
 
 // AccountRepresentative returns the representative for account.
