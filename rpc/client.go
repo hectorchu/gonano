@@ -12,7 +12,7 @@ type Client struct {
 	URL string
 }
 
-func (c *Client) send(body map[string]string) (result map[string]interface{}, err error) {
+func (c *Client) send(body map[string]interface{}) (result map[string]interface{}, err error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.Encode(body)

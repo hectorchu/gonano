@@ -3,12 +3,11 @@ package rpc
 import (
 	"errors"
 	"math/big"
-	"strconv"
 )
 
 // AccountBalance returns how many RAW is owned and how many have not yet been received by account.
 func (c *Client) AccountBalance(account string) (balance, pending *big.Int, err error) {
-	resp, err := c.send(map[string]string{"action": "account_balance", "account": account})
+	resp, err := c.send(map[string]interface{}{"action": "account_balance", "account": account})
 	if err != nil {
 		return
 	}
@@ -23,7 +22,7 @@ func (c *Client) AccountBalance(account string) (balance, pending *big.Int, err 
 
 // AccountBlockCount gets the number of blocks for a specific account.
 func (c *Client) AccountBlockCount(account string) (blockCount uint64, err error) {
-	resp, err := c.send(map[string]string{"action": "account_block_count", "account": account})
+	resp, err := c.send(map[string]interface{}{"action": "account_block_count", "account": account})
 	if err != nil {
 		return
 	}
@@ -32,7 +31,7 @@ func (c *Client) AccountBlockCount(account string) (blockCount uint64, err error
 
 // AccountGet gets the account number for the public key.
 func (c *Client) AccountGet(key string) (account string, err error) {
-	resp, err := c.send(map[string]string{"action": "account_get", "key": key})
+	resp, err := c.send(map[string]interface{}{"action": "account_get", "key": key})
 	if err != nil {
 		return
 	}
@@ -41,11 +40,7 @@ func (c *Client) AccountGet(key string) (account string, err error) {
 
 // AccountHistory reports send/receive information for an account.
 func (c *Client) AccountHistory(account string, count int64, head string) (history []AccountHistory, previous string, err error) {
-	body := map[string]string{
-		"action":  "account_history",
-		"account": account,
-		"count":   strconv.FormatInt(count, 10),
-	}
+	body := map[string]interface{}{"action": "account_history", "account": account, "count": count}
 	if head != "" {
 		body["head"] = head
 	}
@@ -80,12 +75,7 @@ func (c *Client) AccountHistory(account string, count int64, head string) (histo
 // AccountHistoryRaw reports all parameters of the block itself as seen in
 // BlockCreate or other APIs returning blocks.
 func (c *Client) AccountHistoryRaw(account string, count int64, head string) (history []AccountHistoryRaw, previous string, err error) {
-	body := map[string]string{
-		"action":  "account_history",
-		"account": account,
-		"count":   strconv.FormatInt(count, 10),
-		"raw":     "true",
-	}
+	body := map[string]interface{}{"action": "account_history", "account": account, "count": count, "raw": true}
 	if head != "" {
 		body["head"] = head
 	}
@@ -121,7 +111,7 @@ func (c *Client) AccountHistoryRaw(account string, count int64, head string) (hi
 // balance, last modified timestamp from local database & block count for
 // account.
 func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
-	resp, err := c.send(map[string]string{"action": "account_info", "account": account})
+	resp, err := c.send(map[string]interface{}{"action": "account_info", "account": account})
 	if err != nil {
 		return
 	}
@@ -131,7 +121,7 @@ func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
 
 // AccountKey gets the public key for account.
 func (c *Client) AccountKey(account string) (key string, err error) {
-	resp, err := c.send(map[string]string{"action": "account_key", "account": account})
+	resp, err := c.send(map[string]interface{}{"action": "account_key", "account": account})
 	if err != nil {
 		return
 	}
@@ -140,7 +130,7 @@ func (c *Client) AccountKey(account string) (key string, err error) {
 
 // AccountRepresentative returns the representative for account.
 func (c *Client) AccountRepresentative(account string) (representative string, err error) {
-	resp, err := c.send(map[string]string{"action": "account_representative", "account": account})
+	resp, err := c.send(map[string]interface{}{"action": "account_representative", "account": account})
 	if err != nil {
 		return
 	}
@@ -149,7 +139,7 @@ func (c *Client) AccountRepresentative(account string) (representative string, e
 
 // AccountWeight returns the voting weight for account.
 func (c *Client) AccountWeight(account string) (weight *big.Int, err error) {
-	resp, err := c.send(map[string]string{"action": "account_weight", "account": account})
+	resp, err := c.send(map[string]interface{}{"action": "account_weight", "account": account})
 	if err != nil {
 		return
 	}
