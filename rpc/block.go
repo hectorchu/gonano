@@ -66,3 +66,12 @@ func (c *Client) BlockCountType() (send, receive, open, change, state uint64, er
 	}
 	return
 }
+
+// BlockHash returns the block hash for the given block content.
+func (c *Client) BlockHash(block *Block) (hash []byte, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "block_hash", "json_block": true, "block": block})
+	if err != nil {
+		return
+	}
+	return toBytes(resp["hash"])
+}
