@@ -145,3 +145,38 @@ func (c *Client) AccountWeight(account string) (weight *big.Int, err error) {
 	}
 	return toBig(resp["weight"])
 }
+
+// AccountBalance returns how many RAW is owned and how many have not yet been received.
+type AccountBalance struct {
+	Balance, Pending *big.Int
+}
+
+// AccountsBalances returns how many RAW is owned and how many have not yet been received by accounts list.
+func (c *Client) AccountsBalances(accounts []string) (balances map[string]AccountBalance, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "accounts_balances", "accounts": accounts})
+	if err != nil {
+		return
+	}
+	b, ok := resp["balances"].(map[string]interface{})
+	if !ok {
+		err = errors.New("failed to cast balances map")
+		return
+	}
+	balances = make(map[string]AccountBalance)
+	for account, b := range b {
+		b, ok := b.(map[string]interface{})
+		if !ok {
+			err = errors.New("failed to cast balances map")
+			return
+		}
+		var balance AccountBalance
+		if balance.Balance, err = toBig(b["balance"]); err != nil {
+			return
+		}
+		if balance.Pending, err = toBig(b["pending"]); err != nil {
+			return
+		}
+		balances[account] = balance
+	}
+	return
+}
