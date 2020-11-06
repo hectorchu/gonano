@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"encoding/hex"
 	"errors"
 	"math/big"
 )
@@ -152,7 +153,7 @@ type AccountBalance struct {
 }
 
 // AccountsBalances returns how many RAW is owned and how many have not yet been received by accounts list.
-func (c *Client) AccountsBalances(accounts []string) (balances map[string]AccountBalance, err error) {
+func (c *Client) AccountsBalances(accounts []string) (balances map[string]*AccountBalance, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "accounts_balances", "accounts": accounts})
 	if err != nil {
 		return
@@ -162,7 +163,7 @@ func (c *Client) AccountsBalances(accounts []string) (balances map[string]Accoun
 		err = errors.New("failed to cast balances map")
 		return
 	}
-	balances = make(map[string]AccountBalance)
+	balances = make(map[string]*AccountBalance)
 	for account, b := range b {
 		b, ok := b.(map[string]interface{})
 		if !ok {
@@ -176,7 +177,7 @@ func (c *Client) AccountsBalances(accounts []string) (balances map[string]Accoun
 		if balance.Pending, err = toBig(b["pending"]); err != nil {
 			return
 		}
-		balances[account] = balance
+		balances[account] = &balance
 	}
 	return
 }
@@ -196,6 +197,65 @@ func (c *Client) AccountsFrontiers(accounts []string) (frontiers map[string][]by
 	for account, f := range f {
 		if frontiers[account], err = toBytes(f); err != nil {
 			return
+		}
+	}
+	return
+}
+
+// AccountPending returns amount and source account.
+type AccountPending struct {
+	Amount *big.Int
+	Source string
+}
+
+// AccountsPending returns a list of pending block hashes with amount and source accounts.
+func (c *Client) AccountsPending(accounts []string, count uint64) (pending map[string]map[[32]byte]*AccountPending, err error) {
+	resp, err := c.send(map[string]interface{}{
+		"action":                 "accounts_pending",
+		"accounts":               accounts,
+		"count":                  count,
+		"include_only_confirmed": true,
+		"source":                 true,
+	})
+	if err != nil {
+		return
+	}
+	b, ok := resp["blocks"].(map[string]interface{})
+	if !ok {
+		err = errors.New("failed to cast blocks map")
+		return
+	}
+	pending = make(map[string]map[[32]byte]*AccountPending)
+	for account, b := range b {
+		pending[account] = make(map[[32]byte]*AccountPending)
+		if s, ok := b.(string); ok && s == "" {
+			continue
+		}
+		b, ok := b.(map[string]interface{})
+		if !ok {
+			err = errors.New("failed to cast blocks map")
+			return
+		}
+		for hash, b := range b {
+			var h1 []byte
+			var h2 [32]byte
+			if h1, err = hex.DecodeString(hash); err != nil {
+				return
+			}
+			copy(h2[:], h1)
+			b, ok := b.(map[string]interface{})
+			if !ok {
+				err = errors.New("failed to cast blocks map")
+				return
+			}
+			var p AccountPending
+			if p.Amount, err = toBig(b["amount"]); err != nil {
+				return
+			}
+			if p.Source, err = toStr(b["source"]); err != nil {
+				return
+			}
+			pending[account][h2] = &p
 		}
 	}
 	return

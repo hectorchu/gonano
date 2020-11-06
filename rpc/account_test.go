@@ -116,3 +116,11 @@ func TestAccountsFrontiers(t *testing.T) {
 	require.Len(t, frontiers, 1)
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", frontiers[testAccount])
 }
+
+func TestAccountsPending(t *testing.T) {
+	pending, err := getClient().AccountsPending([]string{testAccount}, 1)
+	require.Nil(t, err)
+	require.Len(t, pending, 1)
+	blocks := pending[testAccount]
+	require.Empty(t, blocks)
+}
