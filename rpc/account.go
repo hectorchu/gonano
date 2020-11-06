@@ -69,8 +69,10 @@ func (c *Client) AccountHistory(account string, count int64, head string) (histo
 			return
 		}
 	}
-	if previous, err = toStr(resp["previous"]); err != nil {
-		return
+	if v, ok := resp["previous"]; ok {
+		if previous, err = toStr(v); err != nil {
+			return
+		}
 	}
 	return
 }
