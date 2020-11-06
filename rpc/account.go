@@ -180,3 +180,23 @@ func (c *Client) AccountsBalances(accounts []string) (balances map[string]Accoun
 	}
 	return
 }
+
+// AccountsFrontiers returns a list of pairs of account and block hash representing the head block for accounts list.
+func (c *Client) AccountsFrontiers(accounts []string) (frontiers map[string][]byte, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "accounts_frontiers", "accounts": accounts})
+	if err != nil {
+		return
+	}
+	f, ok := resp["frontiers"].(map[string]interface{})
+	if !ok {
+		err = errors.New("failed to cast frontiers map")
+		return
+	}
+	frontiers = make(map[string][]byte)
+	for account, f := range f {
+		if frontiers[account], err = toBytes(f); err != nil {
+			return
+		}
+	}
+	return
+}

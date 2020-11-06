@@ -109,3 +109,10 @@ func TestAccountsBalances(t *testing.T) {
 	assertEqualBig(t, "134000000000000000000000000", balances[testAccount].Balance)
 	assertEqualBig(t, "0", balances[testAccount].Pending)
 }
+
+func TestAccountsFrontiers(t *testing.T) {
+	frontiers, err := getClient().AccountsFrontiers([]string{testAccount})
+	require.Nil(t, err)
+	require.Len(t, frontiers, 1)
+	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", frontiers[testAccount])
+}
