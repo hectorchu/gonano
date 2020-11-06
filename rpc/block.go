@@ -41,3 +41,28 @@ func (c *Client) BlockCount() (cemented, count, unchecked uint64, err error) {
 	}
 	return
 }
+
+// BlockCountType reports the number of blocks in the ledger by type
+// (send, receive, open, change, state with version).
+func (c *Client) BlockCountType() (send, receive, open, change, state uint64, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "block_count_type"})
+	if err != nil {
+		return
+	}
+	if send, err = toUint(resp["send"]); err != nil {
+		return
+	}
+	if receive, err = toUint(resp["receive"]); err != nil {
+		return
+	}
+	if open, err = toUint(resp["open"]); err != nil {
+		return
+	}
+	if change, err = toUint(resp["change"]); err != nil {
+		return
+	}
+	if state, err = toUint(resp["state"]); err != nil {
+		return
+	}
+	return
+}

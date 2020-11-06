@@ -22,3 +22,13 @@ func TestBlockCount(t *testing.T) {
 	assert.Greater(t, count, uint64(50000000))
 	assert.Less(t, unchecked, uint64(100000))
 }
+
+func TestBlockCountType(t *testing.T) {
+	send, receive, open, change, state, err := getClient().BlockCountType()
+	require.Nil(t, err)
+	assert.Greater(t, send, uint64(5000000))
+	assert.Greater(t, receive, uint64(4000000))
+	assert.Greater(t, open, uint64(500000))
+	assert.Greater(t, change, uint64(20000))
+	assert.Greater(t, state, uint64(40000000))
+}
