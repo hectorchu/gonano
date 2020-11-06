@@ -77,6 +77,46 @@ func (c *Client) AccountHistory(account string, count int64, head string) (histo
 	return
 }
 
+// AccountHistoryRaw reports all parameters of the block itself as seen in
+// BlockCreate or other APIs returning blocks.
+func (c *Client) AccountHistoryRaw(account string, count int64, head string) (history []AccountHistoryRaw, previous string, err error) {
+	body := map[string]string{
+		"action":  "account_history",
+		"account": account,
+		"count":   strconv.FormatInt(count, 10),
+		"raw":     "true",
+	}
+	if head != "" {
+		body["head"] = head
+	}
+	resp, err := c.send(body)
+	if err != nil {
+		return
+	}
+	h, ok := resp["history"].([]interface{})
+	if !ok {
+		err = errors.New("failed to cast history array")
+		return
+	}
+	history = make([]AccountHistoryRaw, len(h))
+	for i, h := range h {
+		h, ok := h.(map[string]interface{})
+		if !ok {
+			err = errors.New("failed to cast history array")
+			return
+		}
+		if err = history[i].parse(h); err != nil {
+			return
+		}
+	}
+	if v, ok := resp["previous"]; ok {
+		if previous, err = toStr(v); err != nil {
+			return
+		}
+	}
+	return
+}
+
 // AccountInfo returns frontier, open block, change representative block,
 // balance, last modified timestamp from local database & block count for
 // account.
