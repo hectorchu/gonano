@@ -28,3 +28,16 @@ func (c *Client) BlockAccount(hash []byte) (account string, err error) {
 	}
 	return toStr(resp["account"])
 }
+
+// BlockConfirm requests confirmation for block from known online representative nodes.
+func (c *Client) BlockConfirm(hash []byte) (started bool, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "block_confirm", "hash": hex.EncodeToString(hash)})
+	if err != nil {
+		return
+	}
+	var started2 uint64
+	if started2, err = toUint(resp["started"]); err != nil {
+		return
+	}
+	return started2 == 1, nil
+}
