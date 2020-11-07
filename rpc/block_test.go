@@ -2,6 +2,7 @@ package rpc_test
 
 import (
 	"encoding/hex"
+	"strings"
 	"testing"
 
 	"github.com/hectorchu/gonano/rpc"
@@ -61,9 +62,9 @@ func TestBlockHash(t *testing.T) {
 	assertEqualBytes(t, "FF0144381CFF0B2C079A115E7ADA7E96F43FD219446E7524C48D1CC9900C4F17", hash)
 }
 
-func TestBlockInfo(t *testing.T) {
-	info, err := getClient().BlockInfo(hexString("8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD"))
-	require.Nil(t, err)
+const testBlockInfoHash = "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD"
+
+func testBlockInfo(t *testing.T, info *rpc.BlockInfo) {
 	assert.Equal(t, "nano_1zcffp784drsmz4oksufxfjut1nb5yh6pg43a6h6bkos39zz19ed6a4r36ny", info.BlockAccount)
 	assertEqualBig(t, "100000000000000000000000000", &info.Amount.Int)
 	assertEqualBig(t, "134000000000000000000000000", &info.Balance.Int)
@@ -80,4 +81,17 @@ func TestBlockInfo(t *testing.T) {
 	assertEqualBytes(t, "E0F2C0187F87917C28BB989DA516114F64FEEAD307011F73F1A0982B3603A51740279ED5DA4D428C3F0E652A638BB75F790B695F9D23125B54DB3312A7F28100", info.Contents.Signature)
 	assertEqualBytes(t, "788f7ec074f1854b", info.Contents.Work)
 	assert.Equal(t, "receive", info.Subtype)
+}
+
+func TestBlockInfo(t *testing.T) {
+	info, err := getClient().BlockInfo(hexString(testBlockInfoHash))
+	require.Nil(t, err)
+	testBlockInfo(t, &info)
+}
+
+func TestBlocksInfo(t *testing.T) {
+	blocks, err := getClient().BlocksInfo([]rpc.BlockHash{hexString(testBlockInfoHash)})
+	require.Nil(t, err)
+	assert.Len(t, blocks, 1)
+	testBlockInfo(t, blocks[strings.ToLower(testBlockInfoHash)])
 }

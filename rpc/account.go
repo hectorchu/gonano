@@ -155,7 +155,7 @@ type AccountPending struct {
 }
 
 // AccountsPending returns a list of pending block hashes with amount and source accounts.
-func (c *Client) AccountsPending(accounts []string, count int64) (pending map[string]map[*BlockHash]*AccountPending, err error) {
+func (c *Client) AccountsPending(accounts []string, count int64) (pending map[string]map[string]*AccountPending, err error) {
 	resp, err := c.send(map[string]interface{}{
 		"action":                 "accounts_pending",
 		"accounts":               accounts,
@@ -167,7 +167,7 @@ func (c *Client) AccountsPending(accounts []string, count int64) (pending map[st
 		return
 	}
 	var v struct {
-		Blocks map[string]map[*BlockHash]*AccountPending
+		Blocks map[string]map[string]*AccountPending
 	}
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err

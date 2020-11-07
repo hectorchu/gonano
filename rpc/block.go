@@ -74,3 +74,25 @@ func (c *Client) BlockInfo(hash BlockHash) (info BlockInfo, err error) {
 	err = json.Unmarshal(resp, &info)
 	return
 }
+
+// Blocks retrieves a json representations of blocks.
+func (c *Client) Blocks(hashes []BlockHash) (blocks map[string]*Block, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "blocks", "json_block": true, "hashes": hashes})
+	if err != nil {
+		return
+	}
+	var v struct{ Blocks map[string]*Block }
+	err = json.Unmarshal(resp, &v)
+	return v.Blocks, err
+}
+
+// BlocksInfo retrieves a json representations of blocks in contents.
+func (c *Client) BlocksInfo(hashes []BlockHash) (blocks map[string]*BlockInfo, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "blocks_info", "json_block": true, "hashes": hashes})
+	if err != nil {
+		return
+	}
+	var v struct{ Blocks map[string]*BlockInfo }
+	err = json.Unmarshal(resp, &v)
+	return v.Blocks, err
+}
