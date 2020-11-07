@@ -46,6 +46,29 @@ func TestBlockCountType(t *testing.T) {
 	assert.Greater(t, state, uint64(40000000))
 }
 
+func TestBlockCreate(t *testing.T) {
+	hash, _, block, err := getClient().BlockCreate(
+		"state",
+		strToRaw("1000000000000000000000"),
+		hexString("0000000000000000000000000000000000000000000000000000000000000002"),
+		nil, "",
+		"nano_1hza3f7wiiqa7ig3jczyxj5yo86yegcmqk3criaz838j91sxcckpfhbhhra1",
+		hexString("19D3D919475DEED4696B5D13018151D1AF88B2BD3BCFF048B45031C1F36D1858"),
+		hexString("F47B23107E5F34B2CE06F562B5C435DF72A533251CB414C51B2B62A8F63A00E4"),
+		hexString("cab7404f0b5449d0"),
+	)
+	require.Nil(t, err)
+	assertEqualBytes(t, "FF0144381CFF0B2C079A115E7ADA7E96F43FD219446E7524C48D1CC9900C4F17", hash)
+	assert.Equal(t, "state", block.Type)
+	assert.Equal(t, "nano_3qgmh14nwztqw4wmcdzy4xpqeejey68chx6nciczwn9abji7ihhum9qtpmdr", block.Account)
+	assertEqualBytes(t, "F47B23107E5F34B2CE06F562B5C435DF72A533251CB414C51B2B62A8F63A00E4", block.Previous)
+	assert.Equal(t, "nano_1hza3f7wiiqa7ig3jczyxj5yo86yegcmqk3criaz838j91sxcckpfhbhhra1", block.Representative)
+	assertEqualBig(t, "1000000000000000000000", &block.Balance.Int)
+	assertEqualBytes(t, "19D3D919475DEED4696B5D13018151D1AF88B2BD3BCFF048B45031C1F36D1858", block.Link)
+	assert.Equal(t, "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc", block.LinkAsAccount)
+	assertEqualBytes(t, "cab7404f0b5449d0", block.Work)
+}
+
 func TestBlockHash(t *testing.T) {
 	hash, err := getClient().BlockHash(&rpc.Block{
 		Type:           "state",

@@ -54,6 +54,49 @@ func (c *Client) BlockCountType() (send, receive, open, change, state uint64, er
 	return v.Send, v.Receive, v.Open, v.Change, v.State, err
 }
 
+// BlockCreate creates a json representation of new block based on input data &
+// signed with private key or account in wallet. Use for offline signing.
+func (c *Client) BlockCreate(
+	Type string,
+	balance *RawAmount,
+	key HexData,
+	wallet HexData,
+	account string,
+	representative string,
+	link, previous BlockHash,
+	work HexData,
+) (hash BlockHash, difficulty HexData, block *Block, err error) {
+	body := map[string]interface{}{
+		"action":         "block_create",
+		"json_block":     true,
+		"type":           Type,
+		"balance":        balance,
+		"representative": representative,
+		"link":           link,
+		"previous":       previous,
+	}
+	if key != nil {
+		body["key"] = key
+	} else {
+		body["wallet"] = wallet
+		body["account"] = account
+	}
+	if work != nil {
+		body["work"] = work
+	}
+	resp, err := c.send(body)
+	if err != nil {
+		return
+	}
+	var v struct {
+		Hash       BlockHash
+		Difficulty HexData
+		Block      *Block
+	}
+	err = json.Unmarshal(resp, &v)
+	return v.Hash, v.Difficulty, v.Block, err
+}
+
 // BlockHash returns the block hash for the given block content.
 func (c *Client) BlockHash(block *Block) (hash BlockHash, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "block_hash", "json_block": true, "block": block})
