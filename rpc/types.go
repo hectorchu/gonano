@@ -81,6 +81,18 @@ func (h *BlockHash) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+// BlockInfo retrieves a json representation of a block.
+type BlockInfo struct {
+	BlockAccount   string     `json:"block_account"`
+	Amount         *RawAmount `json:"amount"`
+	Balance        *RawAmount `json:"balance"`
+	Height         uint64     `json:"height,string"`
+	LocalTimestamp uint64     `json:"local_timestamp,string"`
+	Confirmed      bool       `json:"confirmed,string"`
+	Contents       *Block     `json:"contents"`
+	Subtype        string     `json:"subtype"`
+}
+
 // HexData represents generic hex data.
 type HexData []byte
 

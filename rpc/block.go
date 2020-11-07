@@ -64,3 +64,13 @@ func (c *Client) BlockHash(block *Block) (hash BlockHash, err error) {
 	err = json.Unmarshal(resp, &v)
 	return v.Hash, err
 }
+
+// BlockInfo retrieves a json representation of a block.
+func (c *Client) BlockInfo(hash BlockHash) (info BlockInfo, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "block_info", "json_block": true, "hash": hash})
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(resp, &info)
+	return
+}
