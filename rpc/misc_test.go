@@ -22,3 +22,9 @@ func TestActiveDifficulty(t *testing.T) {
 		assert.GreaterOrEqual(t, multiplier, 1.0)
 	}
 }
+
+func TestAvailableSupply(t *testing.T) {
+	available, err := getClient().AvailableSupply()
+	require.Nil(t, err)
+	assertEqualBig(t, "133246497546603000000000000000000000000", &available.Int)
+}
