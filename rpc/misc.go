@@ -57,3 +57,17 @@ func (c *Client) AvailableSupply() (available *RawAmount, err error) {
 	err = json.Unmarshal(resp, &v)
 	return v.Available, err
 }
+
+// Chain returns a consecutive list of block hashes in the account chain starting
+// at block back to count (direction from frontier back to open block, from newer
+// blocks to older). Will list all blocks back to the open block of this chain when
+// count is set to "-1". The requested block hash is included in the answer.
+func (c *Client) Chain(block BlockHash, count int64) (blocks []BlockHash, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "chain", "block": block, "count": count})
+	if err != nil {
+		return
+	}
+	var v struct{ Blocks []BlockHash }
+	err = json.Unmarshal(resp, &v)
+	return v.Blocks, err
+}
