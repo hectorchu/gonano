@@ -2,7 +2,6 @@ package rpc_test
 
 import (
 	"encoding/hex"
-	"math/big"
 	"testing"
 
 	"github.com/hectorchu/gonano/rpc"
@@ -15,10 +14,10 @@ func hexString(s string) []byte {
 	return b
 }
 
-func strToBig(s string) *big.Int {
-	var x big.Int
-	x.SetString(s, 10)
-	return &x
+func strToRaw(s string) *rpc.RawAmount {
+	var r rpc.RawAmount
+	r.SetString(s, 10)
+	return &r
 }
 
 func TestBlockAccount(t *testing.T) {
@@ -52,7 +51,7 @@ func TestBlockHash(t *testing.T) {
 		Account:        "nano_3qgmh14nwztqw4wmcdzy4xpqeejey68chx6nciczwn9abji7ihhum9qtpmdr",
 		Previous:       hexString("F47B23107E5F34B2CE06F562B5C435DF72A533251CB414C51B2B62A8F63A00E4"),
 		Representative: "nano_1hza3f7wiiqa7ig3jczyxj5yo86yegcmqk3criaz838j91sxcckpfhbhhra1",
-		Balance:        strToBig("1000000000000000000000"),
+		Balance:        strToRaw("1000000000000000000000"),
 		Link:           hexString("19D3D919475DEED4696B5D13018151D1AF88B2BD3BCFF048B45031C1F36D1858"),
 		LinkAsAccount:  "nano_18gmu6engqhgtjnppqam181o5nfhj4sdtgyhy36dan3jr9spt84rzwmktafc",
 		Signature:      hexString("3BFBA64A775550E6D49DF1EB8EEC2136DCD74F090E2ED658FBD9E80F17CB1C9F9F7BDE2B93D95558EC2F277FFF15FD11E6E2162A1714731B743D1E941FA4560A"),

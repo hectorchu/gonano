@@ -1,24 +1,18 @@
 package rpc
 
 import (
-	"encoding/hex"
-	"errors"
-	"math/big"
+	"encoding/json"
 )
 
 // AccountBalance returns how many RAW is owned and how many have not yet been received by account.
-func (c *Client) AccountBalance(account string) (balance, pending *big.Int, err error) {
+func (c *Client) AccountBalance(account string) (balance, pending *RawAmount, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "account_balance", "account": account})
 	if err != nil {
 		return
 	}
-	if balance, err = toBig(resp["balance"]); err != nil {
-		return
-	}
-	if pending, err = toBig(resp["pending"]); err != nil {
-		return
-	}
-	return
+	var v struct{ Balance, Pending *RawAmount }
+	err = json.Unmarshal(resp, &v)
+	return v.Balance, v.Pending, err
 }
 
 // AccountBlockCount gets the number of blocks for a specific account.
@@ -27,7 +21,11 @@ func (c *Client) AccountBlockCount(account string) (blockCount uint64, err error
 	if err != nil {
 		return
 	}
-	return toUint(resp["block_count"])
+	var v struct {
+		BlockCount uint64 `json:"block_count,string"`
+	}
+	err = json.Unmarshal(resp, &v)
+	return v.BlockCount, err
 }
 
 // AccountGet gets the account number for the public key.
@@ -36,76 +34,46 @@ func (c *Client) AccountGet(key string) (account string, err error) {
 	if err != nil {
 		return
 	}
-	return toStr(resp["account"])
+	var v struct{ Account string }
+	err = json.Unmarshal(resp, &v)
+	return v.Account, err
 }
 
 // AccountHistory reports send/receive information for an account.
-func (c *Client) AccountHistory(account string, count int64, head string) (history []AccountHistory, previous []byte, err error) {
+func (c *Client) AccountHistory(account string, count int64, head BlockHash) (history []AccountHistory, previous BlockHash, err error) {
 	body := map[string]interface{}{"action": "account_history", "account": account, "count": count}
-	if head != "" {
+	if head != nil {
 		body["head"] = head
 	}
 	resp, err := c.send(body)
 	if err != nil {
 		return
 	}
-	h, ok := resp["history"].([]interface{})
-	if !ok {
-		err = errors.New("failed to cast history array")
-		return
+	var v struct {
+		History  []AccountHistory
+		Previous BlockHash
 	}
-	history = make([]AccountHistory, len(h))
-	for i, h := range h {
-		h, ok := h.(map[string]interface{})
-		if !ok {
-			err = errors.New("failed to cast history array")
-			return
-		}
-		if err = history[i].parse(h); err != nil {
-			return
-		}
-	}
-	if v, ok := resp["previous"]; ok {
-		if previous, err = toBytes(v); err != nil {
-			return
-		}
-	}
-	return
+	err = json.Unmarshal(resp, &v)
+	return v.History, v.Previous, err
 }
 
 // AccountHistoryRaw reports all parameters of the block itself as seen in
 // BlockCreate or other APIs returning blocks.
-func (c *Client) AccountHistoryRaw(account string, count int64, head string) (history []AccountHistoryRaw, previous []byte, err error) {
+func (c *Client) AccountHistoryRaw(account string, count int64, head BlockHash) (history []AccountHistoryRaw, previous BlockHash, err error) {
 	body := map[string]interface{}{"action": "account_history", "account": account, "count": count, "raw": true}
-	if head != "" {
+	if head != nil {
 		body["head"] = head
 	}
 	resp, err := c.send(body)
 	if err != nil {
 		return
 	}
-	h, ok := resp["history"].([]interface{})
-	if !ok {
-		err = errors.New("failed to cast history array")
-		return
+	var v struct {
+		History  []AccountHistoryRaw
+		Previous BlockHash
 	}
-	history = make([]AccountHistoryRaw, len(h))
-	for i, h := range h {
-		h, ok := h.(map[string]interface{})
-		if !ok {
-			err = errors.New("failed to cast history array")
-			return
-		}
-		if err = history[i].parse(h); err != nil {
-			return
-		}
-	}
-	if v, ok := resp["previous"]; ok {
-		if previous, err = toBytes(v); err != nil {
-			return
-		}
-	}
-	return
+	err = json.Unmarshal(resp, &v)
+	return v.History, v.Previous, err
 }
 
 // AccountInfo returns frontier, open block, change representative block,
@@ -116,17 +84,19 @@ func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
 	if err != nil {
 		return
 	}
-	err = info.parse(resp)
+	err = json.Unmarshal(resp, &info)
 	return
 }
 
 // AccountKey gets the public key for account.
-func (c *Client) AccountKey(account string) (key []byte, err error) {
+func (c *Client) AccountKey(account string) (key HexData, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "account_key", "account": account})
 	if err != nil {
 		return
 	}
-	return toBytes(resp["key"])
+	var v struct{ Key HexData }
+	err = json.Unmarshal(resp, &v)
+	return v.Key, err
 }
 
 // AccountRepresentative returns the representative for account.
@@ -135,21 +105,25 @@ func (c *Client) AccountRepresentative(account string) (representative string, e
 	if err != nil {
 		return
 	}
-	return toStr(resp["representative"])
+	var v struct{ Representative string }
+	err = json.Unmarshal(resp, &v)
+	return v.Representative, err
 }
 
 // AccountWeight returns the voting weight for account.
-func (c *Client) AccountWeight(account string) (weight *big.Int, err error) {
+func (c *Client) AccountWeight(account string) (weight *RawAmount, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "account_weight", "account": account})
 	if err != nil {
 		return
 	}
-	return toBig(resp["weight"])
+	var v struct{ Weight *RawAmount }
+	err = json.Unmarshal(resp, &v)
+	return v.Weight, err
 }
 
 // AccountBalance returns how many RAW is owned and how many have not yet been received.
 type AccountBalance struct {
-	Balance, Pending *big.Int
+	Balance, Pending *RawAmount
 }
 
 // AccountsBalances returns how many RAW is owned and how many have not yet been received by accounts list.
@@ -158,58 +132,30 @@ func (c *Client) AccountsBalances(accounts []string) (balances map[string]*Accou
 	if err != nil {
 		return
 	}
-	b, ok := resp["balances"].(map[string]interface{})
-	if !ok {
-		err = errors.New("failed to cast balances map")
-		return
-	}
-	balances = make(map[string]*AccountBalance)
-	for account, b := range b {
-		b, ok := b.(map[string]interface{})
-		if !ok {
-			err = errors.New("failed to cast balances map")
-			return
-		}
-		var balance AccountBalance
-		if balance.Balance, err = toBig(b["balance"]); err != nil {
-			return
-		}
-		if balance.Pending, err = toBig(b["pending"]); err != nil {
-			return
-		}
-		balances[account] = &balance
-	}
-	return
+	var v struct{ Balances map[string]*AccountBalance }
+	err = json.Unmarshal(resp, &v)
+	return v.Balances, err
 }
 
 // AccountsFrontiers returns a list of pairs of account and block hash representing the head block for accounts list.
-func (c *Client) AccountsFrontiers(accounts []string) (frontiers map[string][]byte, err error) {
+func (c *Client) AccountsFrontiers(accounts []string) (frontiers map[string]BlockHash, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "accounts_frontiers", "accounts": accounts})
 	if err != nil {
 		return
 	}
-	f, ok := resp["frontiers"].(map[string]interface{})
-	if !ok {
-		err = errors.New("failed to cast frontiers map")
-		return
-	}
-	frontiers = make(map[string][]byte)
-	for account, f := range f {
-		if frontiers[account], err = toBytes(f); err != nil {
-			return
-		}
-	}
-	return
+	var v struct{ Frontiers map[string]BlockHash }
+	err = json.Unmarshal(resp, &v)
+	return v.Frontiers, err
 }
 
 // AccountPending returns amount and source account.
 type AccountPending struct {
-	Amount *big.Int
+	Amount *RawAmount
 	Source string
 }
 
 // AccountsPending returns a list of pending block hashes with amount and source accounts.
-func (c *Client) AccountsPending(accounts []string, count uint64) (pending map[string]map[[32]byte]*AccountPending, err error) {
+func (c *Client) AccountsPending(accounts []string, count int64) (pending map[string]map[*BlockHash]*AccountPending, err error) {
 	resp, err := c.send(map[string]interface{}{
 		"action":                 "accounts_pending",
 		"accounts":               accounts,
@@ -220,43 +166,9 @@ func (c *Client) AccountsPending(accounts []string, count uint64) (pending map[s
 	if err != nil {
 		return
 	}
-	b, ok := resp["blocks"].(map[string]interface{})
-	if !ok {
-		err = errors.New("failed to cast blocks map")
-		return
+	var v struct {
+		Blocks map[string]map[*BlockHash]*AccountPending
 	}
-	pending = make(map[string]map[[32]byte]*AccountPending)
-	for account, b := range b {
-		pending[account] = make(map[[32]byte]*AccountPending)
-		if s, ok := b.(string); ok && s == "" {
-			continue
-		}
-		b, ok := b.(map[string]interface{})
-		if !ok {
-			err = errors.New("failed to cast blocks map")
-			return
-		}
-		for hash, b := range b {
-			var h1 []byte
-			var h2 [32]byte
-			if h1, err = hex.DecodeString(hash); err != nil {
-				return
-			}
-			copy(h2[:], h1)
-			b, ok := b.(map[string]interface{})
-			if !ok {
-				err = errors.New("failed to cast blocks map")
-				return
-			}
-			var p AccountPending
-			if p.Amount, err = toBig(b["amount"]); err != nil {
-				return
-			}
-			if p.Source, err = toStr(b["source"]); err != nil {
-				return
-			}
-			pending[account][h2] = &p
-		}
-	}
-	return
+	err = json.Unmarshal(resp, &v)
+	return v.Blocks, err
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"math/big"
 	"testing"
-	"time"
 
 	"github.com/hectorchu/gonano/rpc"
 	"github.com/stretchr/testify/assert"
@@ -31,38 +30,38 @@ func assertEqualBytes(t *testing.T, s string, b []byte) {
 func TestAccountBalance(t *testing.T) {
 	balance, pending, err := getClient().AccountBalance(testAccount)
 	require.Nil(t, err)
-	assertEqualBig(t, "134000000000000000000000000", balance)
-	assertEqualBig(t, "0", pending)
+	assertEqualBig(t, "134000000000000000000000000", &balance.Int)
+	assertEqualBig(t, "0", &pending.Int)
 }
 
 func TestAccountHistory(t *testing.T) {
-	history, previous, err := getClient().AccountHistory(testAccount, 1, "")
+	history, previous, err := getClient().AccountHistory(testAccount, 1, nil)
 	require.Nil(t, err)
 	require.Len(t, history, 1)
 	h := history[0]
 	assert.Equal(t, "receive", h.Type)
 	assert.Equal(t, testAccount, h.Account)
-	assertEqualBig(t, "100000000000000000000000000", h.Amount)
-	assert.Equal(t, time.Date(2020, time.November, 5, 21, 1, 20, 0, time.UTC), h.LocalTimestamp)
+	assertEqualBig(t, "100000000000000000000000000", &h.Amount.Int)
+	assert.Equal(t, uint64(1604610080), h.LocalTimestamp)
 	assert.Equal(t, uint64(3), h.Height)
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", h.Hash)
 	assertEqualBytes(t, "CEC5287A00F5A50E11A80EC3A63C575D37BFD5BAD87BCB1B7E46DBCBE2F1EC3E", previous)
 }
 
 func TestAccountHistoryRaw(t *testing.T) {
-	history, previous, err := getClient().AccountHistoryRaw(testAccount, 1, "")
+	history, previous, err := getClient().AccountHistoryRaw(testAccount, 1, nil)
 	require.Nil(t, err)
 	require.Len(t, history, 1)
 	h := history[0]
 	assert.Equal(t, "state", h.Type)
 	assert.Equal(t, "nano_1natrium1o3z5519ifou7xii8crpxpk8y65qmkih8e8bpsjri651oza8imdd", h.Representative)
 	assertEqualBytes(t, "CEC5287A00F5A50E11A80EC3A63C575D37BFD5BAD87BCB1B7E46DBCBE2F1EC3E", h.Link)
-	assertEqualBig(t, "134000000000000000000000000", h.Balance)
+	assertEqualBig(t, "134000000000000000000000000", &h.Balance.Int)
 	assertEqualBytes(t, "CEC5287A00F5A50E11A80EC3A63C575D37BFD5BAD87BCB1B7E46DBCBE2F1EC3E", h.Previous)
 	assert.Equal(t, "receive", h.Subtype)
 	assert.Equal(t, testAccount, h.Account)
-	assertEqualBig(t, "100000000000000000000000000", h.Amount)
-	assert.Equal(t, time.Date(2020, time.November, 5, 21, 1, 20, 0, time.UTC), h.LocalTimestamp)
+	assertEqualBig(t, "100000000000000000000000000", &h.Amount.Int)
+	assert.Equal(t, uint64(1604610080), h.LocalTimestamp)
 	assert.Equal(t, uint64(3), h.Height)
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", h.Hash)
 	assertEqualBytes(t, "788f7ec074f1854b", h.Work)
@@ -76,8 +75,8 @@ func TestAccountInfo(t *testing.T) {
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", i.Frontier)
 	assertEqualBytes(t, "E6F513D4821F60151DD3C08C078AF3403F59AE44CC7983083E2391A3E1972A8F", i.OpenBlock)
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", i.RepresentativeBlock)
-	assertEqualBig(t, "134000000000000000000000000", i.Balance)
-	assert.Equal(t, time.Date(2020, time.November, 5, 21, 1, 20, 0, time.UTC), i.ModifiedTimestamp)
+	assertEqualBig(t, "134000000000000000000000000", &i.Balance.Int)
+	assert.Equal(t, uint64(1604610080), i.ModifiedTimestamp)
 	assert.Equal(t, uint64(3), i.BlockCount)
 	assert.Equal(t, uint64(2), i.AccountVersion)
 	assert.Equal(t, uint64(3), i.ConfirmationHeight)
@@ -99,15 +98,15 @@ func TestAccountRepresentative(t *testing.T) {
 func TestAccountWeight(t *testing.T) {
 	weight, err := getClient().AccountWeight(testAccount)
 	require.Nil(t, err)
-	assertEqualBig(t, "0", weight)
+	assertEqualBig(t, "0", &weight.Int)
 }
 
 func TestAccountsBalances(t *testing.T) {
 	balances, err := getClient().AccountsBalances([]string{testAccount})
 	require.Nil(t, err)
 	require.Len(t, balances, 1)
-	assertEqualBig(t, "134000000000000000000000000", balances[testAccount].Balance)
-	assertEqualBig(t, "0", balances[testAccount].Pending)
+	assertEqualBig(t, "134000000000000000000000000", &balances[testAccount].Balance.Int)
+	assertEqualBig(t, "0", &balances[testAccount].Pending.Int)
 }
 
 func TestAccountsFrontiers(t *testing.T) {

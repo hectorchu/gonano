@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 )
 
@@ -12,28 +13,24 @@ type Client struct {
 	URL string
 }
 
-func (c *Client) send(body map[string]interface{}) (result map[string]interface{}, err error) {
+func (c *Client) send(body interface{}) (result []byte, err error) {
 	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.Encode(body)
+	json.NewEncoder(&buf).Encode(body)
 	resp, err := http.Post(c.URL, "application/json", &buf)
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
-	dec := json.NewDecoder(resp.Body)
-	dec.Decode(&result)
-	if v, ok := result["error"]; ok {
-		var s string
-		if s, err = toStr(v); err == nil {
-			err = errors.New(s)
-		}
+	buf.Reset()
+	io.Copy(&buf, resp.Body)
+	resp.Body.Close()
+	var v struct{ Error, Message string }
+	if err = json.Unmarshal(buf.Bytes(), &v); err != nil {
+		return
 	}
-	if v, ok := result["message"]; ok {
-		var s string
-		if s, err = toStr(v); err == nil {
-			err = errors.New(s)
-		}
+	if v.Error != "" {
+		err = errors.New(v.Error)
+	} else if v.Message != "" {
+		err = errors.New(v.Message)
 	}
-	return
+	return buf.Bytes(), err
 }
