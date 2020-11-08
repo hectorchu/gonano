@@ -55,13 +55,11 @@ func (c *Client) BlockCountType() (send, receive, open, change, state uint64, er
 }
 
 // BlockCreate creates a json representation of new block based on input data &
-// signed with private key or account in wallet. Use for offline signing.
+// signed with private key. Use for offline signing.
 func (c *Client) BlockCreate(
 	Type string,
 	balance *RawAmount,
 	key HexData,
-	wallet HexData,
-	account string,
 	representative string,
 	link, previous BlockHash,
 	work HexData,
@@ -71,15 +69,10 @@ func (c *Client) BlockCreate(
 		"json_block":     true,
 		"type":           Type,
 		"balance":        balance,
+		"key":            key,
 		"representative": representative,
 		"link":           link,
 		"previous":       previous,
-	}
-	if key != nil {
-		body["key"] = key
-	} else {
-		body["wallet"] = wallet
-		body["account"] = account
 	}
 	if work != nil {
 		body["work"] = work
@@ -187,18 +180,11 @@ func (c *Client) Republish(hash BlockHash, count, sources, destinations int64) (
 	return v.Blocks, err
 }
 
-// Sign signs the provided block with private key or key of account from wallet.
-func (c *Client) Sign(block *Block, key, wallet HexData, account string) (
-	signature HexData, block2 *Block, err error,
-) {
-	body := map[string]interface{}{"action": "sign", "json_block": true, "block": block}
-	if key != nil {
-		body["key"] = key
-	} else {
-		body["wallet"] = wallet
-		body["account"] = account
-	}
-	resp, err := c.send(body)
+// Sign signs the provided block with private key.
+func (c *Client) Sign(block *Block, key HexData) (signature HexData, block2 *Block, err error) {
+	resp, err := c.send(map[string]interface{}{
+		"action": "sign", "json_block": true, "key": key, "block": block,
+	})
 	if err != nil {
 		return
 	}
