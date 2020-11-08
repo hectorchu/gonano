@@ -139,3 +139,19 @@ func (c *Client) BlocksInfo(hashes []BlockHash) (blocks map[string]*BlockInfo, e
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err
 }
+
+// Process publishes block to the network.
+func (c *Client) Process(block *Block, subtype string) (hash BlockHash, err error) {
+	resp, err := c.send(map[string]interface{}{
+		"action":     "process",
+		"json_block": true,
+		"subtype":    subtype,
+		"block":      block,
+	})
+	if err != nil {
+		return
+	}
+	var v struct{ Hash BlockHash }
+	err = json.Unmarshal(resp, &v)
+	return v.Hash, err
+}
