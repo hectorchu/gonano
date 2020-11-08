@@ -169,3 +169,20 @@ func (c *Client) Process(block *Block, subtype string) (hash BlockHash, err erro
 	err = json.Unmarshal(resp, &v)
 	return v.Hash, err
 }
+
+// Republish rebroadcasts blocks starting at hash to the network.
+func (c *Client) Republish(hash BlockHash, count, sources, destinations int64) (blocks []BlockHash, err error) {
+	resp, err := c.send(map[string]interface{}{
+		"action":       "republish",
+		"hash":         hash,
+		"count":        count,
+		"sources":      sources,
+		"destinations": destinations,
+	})
+	if err != nil {
+		return
+	}
+	var v struct{ Blocks []BlockHash }
+	err = json.Unmarshal(resp, &v)
+	return v.Blocks, err
+}
