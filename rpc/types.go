@@ -48,6 +48,9 @@ type AccountInfo struct {
 	ConfirmationHeight         uint64     `json:"confirmation_height,string"`
 	ConfirmationHeightFrontier BlockHash  `json:"confirmation_height_frontier"`
 	AccountVersion             uint64     `json:"account_version,string"`
+	Representative             string     `json:"representative"`
+	Weight                     *RawAmount `json:"weight"`
+	Pending                    *RawAmount `json:"pending"`
 }
 
 // Block corresponds to the JSON representation of a block.

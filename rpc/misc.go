@@ -169,3 +169,22 @@ func (c *Client) KeyExpand(key HexData) (private, public HexData, account string
 	err = json.Unmarshal(resp, &v)
 	return v.Private, v.Public, v.Account, err
 }
+
+// Ledger returns frontier, open block, change representative block, balance, last
+// modified timestamp from local database & block count starting at account up to count.
+func (c *Client) Ledger(account string, count int64) (accounts map[string]AccountInfo, err error) {
+	resp, err := c.send(map[string]interface{}{
+		"action":         "ledger",
+		"account":        account,
+		"count":          count,
+		"representative": true,
+		"weight":         true,
+		"pending":        true,
+	})
+	if err != nil {
+		return
+	}
+	var v struct{ Accounts map[string]AccountInfo }
+	err = json.Unmarshal(resp, &v)
+	return v.Accounts, err
+}
