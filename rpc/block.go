@@ -187,6 +187,29 @@ func (c *Client) Republish(hash BlockHash, count, sources, destinations int64) (
 	return v.Blocks, err
 }
 
+// Sign signs the provided block with private key or key of account from wallet.
+func (c *Client) Sign(block *Block, key, wallet HexData, account string) (
+	signature HexData, block2 *Block, err error,
+) {
+	body := map[string]interface{}{"action": "sign", "json_block": true, "block": block}
+	if key != nil {
+		body["key"] = key
+	} else {
+		body["wallet"] = wallet
+		body["account"] = account
+	}
+	resp, err := c.send(body)
+	if err != nil {
+		return
+	}
+	var v struct {
+		Signature HexData
+		Block     *Block
+	}
+	err = json.Unmarshal(resp, &v)
+	return v.Signature, v.Block, err
+}
+
 // Successors returns a consecutive list of block hashes in the account chain starting
 // at block up to count (direction from open block up to frontier, from older
 // blocks to newer). Will list all blocks up to frontier (latest block) of this chain
