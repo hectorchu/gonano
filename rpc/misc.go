@@ -71,3 +71,73 @@ func (c *Client) Chain(block BlockHash, count int64) (blocks []BlockHash, err er
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err
 }
+
+// Delegators returns a list of pairs of delegator names given a representative account
+// and its balance.
+func (c *Client) Delegators(account string) (delegators map[string]*RawAmount, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "delegators", "account": account})
+	if err != nil {
+		return
+	}
+	var v struct{ Delegators map[string]*RawAmount }
+	err = json.Unmarshal(resp, &v)
+	return v.Delegators, err
+}
+
+// DelegatorsCount gets number of delegators for a specific representative account.
+func (c *Client) DelegatorsCount(account string) (count uint64, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "delegators_count", "account": account})
+	if err != nil {
+		return
+	}
+	var v struct {
+		Count uint64 `json:",string"`
+	}
+	err = json.Unmarshal(resp, &v)
+	return v.Count, err
+}
+
+// DeterministicKey derives a deterministic keypair from seed based on index.
+func (c *Client) DeterministicKey(seed HexData, index uint64) (
+	private, public HexData, account string, err error,
+) {
+	resp, err := c.send(map[string]interface{}{
+		"action": "deterministic_key", "seed": seed, "index": index,
+	})
+	if err != nil {
+		return
+	}
+	var v struct {
+		Private, Public HexData
+		Account         string
+	}
+	err = json.Unmarshal(resp, &v)
+	return v.Private, v.Public, v.Account, err
+}
+
+// FrontierCount reports the number of accounts in the ledger.
+func (c *Client) FrontierCount() (count uint64, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "frontier_count"})
+	if err != nil {
+		return
+	}
+	var v struct {
+		Count uint64 `json:",string"`
+	}
+	err = json.Unmarshal(resp, &v)
+	return v.Count, err
+}
+
+// Frontiers returns a list of pairs of account and block hash representing the
+// head block starting at account up to count.
+func (c *Client) Frontiers(account string, count int64) (frontiers map[string]BlockHash, err error) {
+	resp, err := c.send(map[string]interface{}{
+		"action": "frontiers", "account": account, "count": count,
+	})
+	if err != nil {
+		return
+	}
+	var v struct{ Frontiers map[string]BlockHash }
+	err = json.Unmarshal(resp, &v)
+	return v.Frontiers, err
+}

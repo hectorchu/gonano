@@ -38,3 +38,9 @@ func TestChain(t *testing.T) {
 	assertEqualBytes(t, "CEC5287A00F5A50E11A80EC3A63C575D37BFD5BAD87BCB1B7E46DBCBE2F1EC3E", blocks[1])
 	assertEqualBytes(t, "E6F513D4821F60151DD3C08C078AF3403F59AE44CC7983083E2391A3E1972A8F", blocks[2])
 }
+
+func TestFrontierCount(t *testing.T) {
+	count, err := getClient().FrontierCount()
+	require.Nil(t, err)
+	assert.Greater(t, count, uint64(2000000))
+}
