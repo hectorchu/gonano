@@ -128,3 +128,9 @@ func TestAccountsPending(t *testing.T) {
 	assertEqualBig(t, "123000000000000000000000000", &pending.Amount.Int)
 	assert.Equal(t, "nano_3kwppxjcggzs65fjh771ch6dbuic3xthsn5wsg6i5537jacw7m493ra8574x", pending.Source)
 }
+
+func TestFrontierCount(t *testing.T) {
+	count, err := getClient().FrontierCount()
+	require.Nil(t, err)
+	assert.Greater(t, count, uint64(2000000))
+}
