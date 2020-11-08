@@ -117,9 +117,14 @@ func TestAccountsFrontiers(t *testing.T) {
 }
 
 func TestAccountsPending(t *testing.T) {
-	pending, err := getClient().AccountsPending([]string{testAccount}, 1)
+	pendings, err := getClient().AccountsPending([]string{
+		testAccount, "nano_159m8t4iedstzcaacikb9hdkhbcxcqzfbw56dutay8ceqagq9wxpsk9ftfq9"}, 1)
 	require.Nil(t, err)
-	require.Len(t, pending, 1)
-	blocks := pending[testAccount]
-	require.Empty(t, blocks)
+	require.Len(t, pendings, 2)
+	assert.Empty(t, pendings[testAccount])
+	blocks := pendings["nano_159m8t4iedstzcaacikb9hdkhbcxcqzfbw56dutay8ceqagq9wxpsk9ftfq9"]
+	require.Len(t, blocks, 1)
+	pending := blocks["96D8422D1CB676EF1B62A313865626A7725C3B9BB5B875601A1460ACF30B5322"]
+	assertEqualBig(t, "123000000000000000000000000", &pending.Amount.Int)
+	assert.Equal(t, "nano_3kwppxjcggzs65fjh771ch6dbuic3xthsn5wsg6i5537jacw7m493ra8574x", pending.Source)
 }

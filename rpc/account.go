@@ -154,8 +154,23 @@ type AccountPending struct {
 	Source string
 }
 
+// HashToPendingMap maps pending block hashes to amount and source account.
+type HashToPendingMap map[string]AccountPending
+
+// UnmarshalJSON sets *h to a copy of data.
+func (h *HashToPendingMap) UnmarshalJSON(data []byte) (err error) {
+	var s string
+	if err = json.Unmarshal(data, &s); err == nil && s == "" {
+		return
+	}
+	var v map[string]AccountPending
+	err = json.Unmarshal(data, &v)
+	*h = v
+	return
+}
+
 // AccountsPending returns a list of pending block hashes with amount and source accounts.
-func (c *Client) AccountsPending(accounts []string, count int64) (pending map[string]map[string]*AccountPending, err error) {
+func (c *Client) AccountsPending(accounts []string, count int64) (pending map[string]HashToPendingMap, err error) {
 	resp, err := c.send(map[string]interface{}{
 		"action":                 "accounts_pending",
 		"accounts":               accounts,
@@ -167,7 +182,7 @@ func (c *Client) AccountsPending(accounts []string, count int64) (pending map[st
 		return
 	}
 	var v struct {
-		Blocks map[string]map[string]*AccountPending
+		Blocks map[string]HashToPendingMap
 	}
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err
