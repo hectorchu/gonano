@@ -186,3 +186,17 @@ func (c *Client) Republish(hash BlockHash, count, sources, destinations int64) (
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err
 }
+
+// Successors returns a consecutive list of block hashes in the account chain starting
+// at block up to count (direction from open block up to frontier, from older
+// blocks to newer). Will list all blocks up to frontier (latest block) of this chain
+// when count is set to "-1". The requested block hash is included in the answer.
+func (c *Client) Successors(block BlockHash, count int64) (blocks []BlockHash, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "successors", "block": block, "count": count})
+	if err != nil {
+		return
+	}
+	var v struct{ Blocks []BlockHash }
+	err = json.Unmarshal(resp, &v)
+	return v.Blocks, err
+}
