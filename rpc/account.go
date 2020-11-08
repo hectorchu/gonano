@@ -258,3 +258,28 @@ func (c *Client) Ledger(account string, count int64) (accounts map[string]Accoun
 	err = json.Unmarshal(resp, &v)
 	return v.Accounts, err
 }
+
+// Representatives returns a list of pairs of representative and its voting weight.
+func (c *Client) Representatives(count int64) (representatives map[string]*RawAmount, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "representatives", "count": count})
+	if err != nil {
+		return
+	}
+	var v struct{ Representatives map[string]*RawAmount }
+	err = json.Unmarshal(resp, &v)
+	return v.Representatives, err
+}
+
+// Representative returns the weight of a representative.
+type Representative struct{ Weight *RawAmount }
+
+// RepresentativesOnline returns a list of online representative accounts that have voted recently.
+func (c *Client) RepresentativesOnline() (representatives map[string]Representative, err error) {
+	resp, err := c.send(map[string]interface{}{"action": "representatives_online", "weight": true})
+	if err != nil {
+		return
+	}
+	var v struct{ Representatives map[string]Representative }
+	err = json.Unmarshal(resp, &v)
+	return v.Representatives, err
+}

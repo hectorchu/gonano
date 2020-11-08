@@ -134,3 +134,21 @@ func TestFrontierCount(t *testing.T) {
 	require.Nil(t, err)
 	assert.Greater(t, count, uint64(2000000))
 }
+
+func TestRepresentatives(t *testing.T) {
+	representatives, err := getClient().Representatives(2)
+	require.Nil(t, err)
+	require.Len(t, representatives, 3)
+	for _, weight := range representatives {
+		assert.GreaterOrEqual(t, weight.Cmp(&big.Int{}), 0)
+	}
+}
+
+func TestRepresentativesOnline(t *testing.T) {
+	representatives, err := getClient().RepresentativesOnline()
+	require.Nil(t, err)
+	require.NotEmpty(t, representatives)
+	for _, r := range representatives {
+		assert.Greater(t, r.Weight.Cmp(&big.Int{}), 0)
+	}
+}
