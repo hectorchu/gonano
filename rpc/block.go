@@ -54,53 +54,6 @@ func (c *Client) BlockCountType() (send, receive, open, change, state uint64, er
 	return v.Send, v.Receive, v.Open, v.Change, v.State, err
 }
 
-// BlockCreate creates a json representation of new block based on input data &
-// signed with private key. Use for offline signing.
-func (c *Client) BlockCreate(
-	Type string,
-	balance *RawAmount,
-	key HexData,
-	representative string,
-	link, previous BlockHash,
-	work HexData,
-) (hash BlockHash, difficulty HexData, block *Block, err error) {
-	body := map[string]interface{}{
-		"action":         "block_create",
-		"json_block":     true,
-		"type":           Type,
-		"balance":        balance,
-		"key":            key,
-		"representative": representative,
-		"link":           link,
-		"previous":       previous,
-	}
-	if work != nil {
-		body["work"] = work
-	}
-	resp, err := c.send(body)
-	if err != nil {
-		return
-	}
-	var v struct {
-		Hash       BlockHash
-		Difficulty HexData
-		Block      *Block
-	}
-	err = json.Unmarshal(resp, &v)
-	return v.Hash, v.Difficulty, v.Block, err
-}
-
-// BlockHash returns the block hash for the given block content.
-func (c *Client) BlockHash(block *Block) (hash BlockHash, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "block_hash", "json_block": true, "block": block})
-	if err != nil {
-		return
-	}
-	var v struct{ Hash BlockHash }
-	err = json.Unmarshal(resp, &v)
-	return v.Hash, err
-}
-
 // BlockInfo retrieves a json representation of a block.
 func (c *Client) BlockInfo(hash BlockHash) (info BlockInfo, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "block_info", "json_block": true, "hash": hash})
@@ -178,22 +131,6 @@ func (c *Client) Republish(hash BlockHash, count, sources, destinations int64) (
 	var v struct{ Blocks []BlockHash }
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err
-}
-
-// Sign signs the provided block with private key.
-func (c *Client) Sign(block *Block, key HexData) (signature HexData, block2 *Block, err error) {
-	resp, err := c.send(map[string]interface{}{
-		"action": "sign", "json_block": true, "key": key, "block": block,
-	})
-	if err != nil {
-		return
-	}
-	var v struct {
-		Signature HexData
-		Block     *Block
-	}
-	err = json.Unmarshal(resp, &v)
-	return v.Signature, v.Block, err
 }
 
 // Successors returns a consecutive list of block hashes in the account chain starting

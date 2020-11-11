@@ -28,17 +28,6 @@ func (c *Client) AccountBlockCount(account string) (blockCount uint64, err error
 	return v.BlockCount, err
 }
 
-// AccountGet gets the account number for the public key.
-func (c *Client) AccountGet(key string) (account string, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "account_get", "key": key})
-	if err != nil {
-		return
-	}
-	var v struct{ Account string }
-	err = json.Unmarshal(resp, &v)
-	return v.Account, err
-}
-
 // AccountHistory reports send/receive information for an account.
 func (c *Client) AccountHistory(account string, count int64, head BlockHash) (history []AccountHistory, previous BlockHash, err error) {
 	body := map[string]interface{}{"action": "account_history", "account": account, "count": count}
@@ -86,17 +75,6 @@ func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
 	}
 	err = json.Unmarshal(resp, &info)
 	return
-}
-
-// AccountKey gets the public key for account.
-func (c *Client) AccountKey(account string) (key HexData, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "account_key", "account": account})
-	if err != nil {
-		return
-	}
-	var v struct{ Key HexData }
-	err = json.Unmarshal(resp, &v)
-	return v.Key, err
 }
 
 // AccountRepresentative returns the representative for account.

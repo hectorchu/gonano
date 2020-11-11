@@ -24,3 +24,9 @@ func TestDeriveAddress(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, "nano_1e5aqegc1jb7qe964u4adzmcezyo6o146zb8hm6dft8tkp79za3sxwjym5rx", address)
 }
+
+func TestAddressToPubkey(t *testing.T) {
+	pubkey, err := addressToPubkey("nano_1e5aqegc1jb7qe964u4adzmcezyo6o146zb8hm6dft8tkp79za3sxwjym5rx")
+	require.Nil(t, err)
+	assert.Equal(t, "3068bb1ca04525bb0e416c485fe6a67fd52540227d267cc8b6e8da958a7fa039", hex.EncodeToString(pubkey))
+}

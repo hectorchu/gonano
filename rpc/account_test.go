@@ -83,12 +83,6 @@ func TestAccountInfo(t *testing.T) {
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", i.ConfirmationHeightFrontier)
 }
 
-func TestAccountKey(t *testing.T) {
-	key, err := getClient().AccountKey(testAccount)
-	require.Nil(t, err)
-	assertEqualBytes(t, "7D4D6D8A612F199FC559676DEB63BD02891F9E4B3841411E44CAB909FFF01D8B", key)
-}
-
 func TestAccountRepresentative(t *testing.T) {
 	representative, err := getClient().AccountRepresentative(testAccount)
 	require.Nil(t, err)
