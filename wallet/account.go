@@ -44,7 +44,6 @@ func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err
 		Representative: info.Representative,
 		Balance:        info.Balance,
 		Link:           link,
-		LinkAsAccount:  account,
 	}
 	if err = a.sign(block); err != nil {
 		return
@@ -91,7 +90,6 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 			Representative: info.Representative,
 			Balance:        info.Balance,
 			Link:           link,
-			LinkAsAccount:  pending.Source,
 		}
 		if err = a.sign(block); err != nil {
 			return err
