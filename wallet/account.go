@@ -106,6 +106,29 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 	return
 }
 
+// ChangeRep changes the account's representative.
+func (a *Account) ChangeRep(representative string) (hash rpc.BlockHash, err error) {
+	info, err := a.w.RPC.AccountInfo(a.address)
+	if err != nil {
+		return
+	}
+	block := &rpc.Block{
+		Type:           "state",
+		Account:        a.address,
+		Previous:       info.Frontier,
+		Representative: representative,
+		Balance:        info.Balance,
+		Link:           make(rpc.BlockHash, 32),
+	}
+	if err = a.sign(block); err != nil {
+		return
+	}
+	if block.Work, _, _, err = a.w.RPCWork.WorkGenerate(info.Frontier); err != nil {
+		return
+	}
+	return a.w.RPC.Process(block, "change")
+}
+
 func (a *Account) sign(block *rpc.Block) (err error) {
 	hash, err := blake2b.New256(nil)
 	if err != nil {
