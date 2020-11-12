@@ -10,18 +10,19 @@ import (
 
 // Wallet represents a wallet.
 type Wallet struct {
-	seed  []byte
-	index uint32
-	key   map[string][]byte
-	rpc   rpc.Client
+	seed         []byte
+	index        uint32
+	key          map[string][]byte
+	RPC, RPCWork rpc.Client
 }
 
 // NewWallet creates a new wallet.
 func NewWallet(seed []byte) (wallet *Wallet, err error) {
 	wallet = &Wallet{
-		seed: seed,
-		key:  make(map[string][]byte),
-		rpc:  rpc.Client{URL: "https://mynano.ninja/api/node"},
+		seed:    seed,
+		key:     make(map[string][]byte),
+		RPC:     rpc.Client{URL: "https://mynano.ninja/api/node"},
+		RPCWork: rpc.Client{URL: "http://[::1]:7076"},
 	}
 	return
 }
@@ -32,7 +33,7 @@ func (w *Wallet) NewAccount() (address string, err error) {
 	if err != nil {
 		return
 	}
-	pubkey, err := derivePubkey(key)
+	pubkey, key, err := deriveKeypair(key)
 	if err != nil {
 		return
 	}
@@ -51,7 +52,7 @@ func (w *Wallet) ReceivePendings() (err error) {
 	for address := range w.key {
 		accounts = append(accounts, address)
 	}
-	pendings, err := w.rpc.AccountsPending(accounts, -1)
+	pendings, err := w.RPC.AccountsPending(accounts, -1)
 	for account, pendings := range pendings {
 		for s, pending := range pendings {
 			blockHash, err := hex.DecodeString(s)
@@ -68,7 +69,15 @@ func (w *Wallet) ReceivePendings() (err error) {
 				LinkAsAccount:  pending.Source,
 			}
 			w.signBlock(block)
-			blockHash, err = w.rpc.Process(block, "receive")
+			pubkey, err := addressToPubkey(block.Account)
+			if err != nil {
+				return err
+			}
+			block.Work, _, _, err = w.RPCWork.WorkGenerate(pubkey)
+			if err != nil {
+				return err
+			}
+			blockHash, err = w.RPC.Process(block, "receive")
 			if err != nil {
 				return err
 			}

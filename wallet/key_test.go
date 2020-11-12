@@ -17,7 +17,7 @@ func TestDeriveKey(t *testing.T) {
 
 func TestDeriveAddress(t *testing.T) {
 	key, _ := hex.DecodeString("781186FB9EF17DB6E3D1056550D9FAE5D5BBADA6A6BC370E4CBB938B1DC71DA3")
-	pubkey, err := derivePubkey(key)
+	pubkey, _, err := deriveKeypair(key)
 	require.Nil(t, err)
 	assert.Equal(t, "3068bb1ca04525bb0e416c485fe6a67fd52540227d267cc8b6e8da958a7fa039", hex.EncodeToString(pubkey))
 	address, err := deriveAddress(pubkey)

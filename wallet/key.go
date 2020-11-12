@@ -26,9 +26,8 @@ func deriveKey(seed []byte, index uint32) (key []byte, err error) {
 	return hash.Sum(nil), nil
 }
 
-func derivePubkey(key []byte) (pubkey []byte, err error) {
-	pubkey, _, err = ed25519.GenerateKey(bytes.NewReader(key))
-	return
+func deriveKeypair(key []byte) (pubkey, privkey []byte, err error) {
+	return ed25519.GenerateKey(bytes.NewReader(key))
 }
 
 func deriveAddress(pubkey []byte) (address string, err error) {
