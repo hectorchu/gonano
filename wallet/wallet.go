@@ -2,6 +2,8 @@ package wallet
 
 import (
 	"encoding/hex"
+	"errors"
+	"math/big"
 
 	"github.com/hectorchu/gonano/rpc"
 	"github.com/hectorchu/gonano/wallet/ed25519"
@@ -44,6 +46,39 @@ func (w *Wallet) NewAccount() (address string, err error) {
 	w.key[address] = key
 	w.index++
 	return
+}
+
+// Send sends an amount from an account.
+func (w *Wallet) Send(account, destAccount string, amount *big.Int) (hash rpc.BlockHash, err error) {
+	info, err := w.RPC.AccountInfo(account)
+	if err != nil {
+		return
+	}
+	link, err := addressToPubkey(destAccount)
+	if err != nil {
+		return
+	}
+	info.Balance.Sub(&info.Balance.Int, amount)
+	if info.Balance.Cmp(&big.Int{}) < 0 {
+		err = errors.New("insufficient funds")
+		return
+	}
+	block := &rpc.Block{
+		Type:           "state",
+		Account:        account,
+		Previous:       info.Frontier,
+		Representative: info.Representative,
+		Balance:        info.Balance,
+		Link:           link,
+		LinkAsAccount:  destAccount,
+	}
+	if err = w.sign(block); err != nil {
+		return
+	}
+	if block.Work, _, _, err = w.RPCWork.WorkGenerate(info.Frontier); err != nil {
+		return
+	}
+	return w.RPC.Process(block, "send")
 }
 
 // ReceivePendings receives all pending amounts.
