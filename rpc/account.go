@@ -127,6 +127,10 @@ func (c *Client) AccountsFrontiers(accounts []string) (frontiers map[string]Bloc
 	if err != nil {
 		return
 	}
+	var u struct{ Frontiers string }
+	if err = json.Unmarshal(resp, &u); err == nil && u.Frontiers == "" {
+		return
+	}
 	var v struct{ Frontiers map[string]BlockHash }
 	err = json.Unmarshal(resp, &v)
 	return v.Frontiers, err

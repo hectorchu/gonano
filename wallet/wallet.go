@@ -12,13 +12,41 @@ type Wallet struct {
 }
 
 // NewWallet creates a new wallet.
-func NewWallet(seed []byte) *Wallet {
-	return &Wallet{
+func NewWallet(seed []byte) (w *Wallet, err error) {
+	w = &Wallet{
 		seed:     seed,
 		accounts: make(map[string]*Account),
 		RPC:      rpc.Client{URL: "https://mynano.ninja/api/node"},
 		RPCWork:  rpc.Client{URL: "http://[::1]:7076"},
 	}
+	err = w.scanForAccounts()
+	return
+}
+
+func (w *Wallet) scanForAccounts() (err error) {
+	accounts := make([]string, 10)
+	for i := range accounts {
+		account, err := w.NewAccount()
+		if err != nil {
+			return err
+		}
+		accounts[i] = account.Address()
+	}
+	frontiers, err := w.RPC.AccountsFrontiers(accounts)
+	if err != nil {
+		return
+	}
+	i := len(accounts) - 1
+	for ; i >= 0; i-- {
+		if frontiers[accounts[i]] != nil {
+			break
+		}
+		delete(w.accounts, accounts[i])
+	}
+	if i < 5 {
+		return
+	}
+	return w.scanForAccounts()
 }
 
 // NewAccount creates a new account.
