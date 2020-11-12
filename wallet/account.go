@@ -22,6 +22,15 @@ func (a *Account) Address() string {
 	return a.address
 }
 
+// Balance gets the confirmed and pending balances for account.
+func (a *Account) Balance() (balance, pending *big.Int, err error) {
+	b, p, err := a.w.RPC.AccountBalance(a.address)
+	if err != nil {
+		return
+	}
+	return &b.Int, &p.Int, nil
+}
+
 // Send sends an amount to an account.
 func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err error) {
 	link, err := addressToPubkey(account)

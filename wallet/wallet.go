@@ -7,7 +7,6 @@ import (
 // Wallet represents a wallet.
 type Wallet struct {
 	seed         []byte
-	index        uint32
 	accounts     map[string]*Account
 	RPC, RPCWork rpc.Client
 }
@@ -24,7 +23,7 @@ func NewWallet(seed []byte) *Wallet {
 
 // NewAccount creates a new account.
 func (w *Wallet) NewAccount() (a *Account, err error) {
-	key, err := deriveKey(w.seed, w.index)
+	key, err := deriveKey(w.seed, uint32(len(w.accounts)))
 	if err != nil {
 		return
 	}
@@ -36,7 +35,20 @@ func (w *Wallet) NewAccount() (a *Account, err error) {
 		return
 	}
 	w.accounts[a.address] = a
-	w.index++
+	return
+}
+
+// GetAccount gets the account with address or nil if not found.
+func (w *Wallet) GetAccount(address string) *Account {
+	return w.accounts[address]
+}
+
+// GetAccounts gets all the accounts in the wallet.
+func (w *Wallet) GetAccounts() (accounts []*Account) {
+	accounts = make([]*Account, 0, len(w.accounts))
+	for _, account := range w.accounts {
+		accounts = append(accounts, account)
+	}
 	return
 }
 
