@@ -53,32 +53,28 @@ func (w *Wallet) ReceivePendings() (err error) {
 		accounts = append(accounts, address)
 	}
 	pendings, err := w.RPC.AccountsPending(accounts, -1)
+	if err != nil {
+		return
+	}
 	for account, pendings := range pendings {
-		for s, pending := range pendings {
-			blockHash, err := hex.DecodeString(s)
+		if len(pendings) == 0 {
+			continue
+		}
+		info, err := w.RPC.AccountInfo(account)
+		if err != nil {
+			info.Balance = &rpc.RawAmount{}
+			info.Representative = "nano_1stofnrxuz3cai7ze75o174bpm7scwj9jn3nxsn8ntzg784jf1gzn1jjdkou"
+		}
+		for hash, pending := range pendings {
+			link, err := hex.DecodeString(hash)
 			if err != nil {
 				return err
 			}
-			block := &rpc.Block{
-				Type:           "state",
-				Account:        account,
-				Previous:       make(rpc.BlockHash, 32),
-				Representative: "nano_1stofnrxuz3cai7ze75o174bpm7scwj9jn3nxsn8ntzg784jf1gzn1jjdkou",
-				Balance:        pending.Amount,
-				Link:           blockHash,
-				LinkAsAccount:  pending.Source,
-			}
-			w.signBlock(block)
-			pubkey, err := addressToPubkey(block.Account)
-			if err != nil {
-				return err
-			}
-			block.Work, _, _, err = w.RPCWork.WorkGenerate(pubkey)
-			if err != nil {
-				return err
-			}
-			blockHash, err = w.RPC.Process(block, "receive")
-			if err != nil {
+			info.Balance.Add(&info.Balance.Int, &pending.Amount.Int)
+			if info.Frontier, err = w.receive(
+				account, info.Representative, pending.Source,
+				info.Balance, info.Frontier, link,
+			); err != nil {
 				return err
 			}
 		}
@@ -86,7 +82,36 @@ func (w *Wallet) ReceivePendings() (err error) {
 	return
 }
 
-func (w *Wallet) signBlock(block *rpc.Block) (err error) {
+func (w *Wallet) receive(
+	account, representative, sourceAccount string,
+	balance *rpc.RawAmount, previous, link rpc.BlockHash,
+) (hash rpc.BlockHash, err error) {
+	workHash := previous
+	if previous == nil {
+		previous = make(rpc.BlockHash, 32)
+		if workHash, err = addressToPubkey(account); err != nil {
+			return
+		}
+	}
+	block := &rpc.Block{
+		Type:           "state",
+		Account:        account,
+		Previous:       previous,
+		Representative: representative,
+		Balance:        balance,
+		Link:           link,
+		LinkAsAccount:  sourceAccount,
+	}
+	if err = w.sign(block); err != nil {
+		return
+	}
+	if block.Work, _, _, err = w.RPCWork.WorkGenerate(workHash); err != nil {
+		return
+	}
+	return w.RPC.Process(block, "receive")
+}
+
+func (w *Wallet) sign(block *rpc.Block) (err error) {
 	hash, err := blake2b.New256(nil)
 	if err != nil {
 		return

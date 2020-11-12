@@ -69,7 +69,13 @@ func (c *Client) AccountHistoryRaw(account string, count int64, head BlockHash) 
 // balance, last modified timestamp from local database & block count for
 // account.
 func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "account_info", "account": account})
+	resp, err := c.send(map[string]interface{}{
+		"action":         "account_info",
+		"account":        account,
+		"representative": true,
+		"weight":         true,
+		"pending":        true,
+	})
 	if err != nil {
 		return
 	}
