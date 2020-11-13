@@ -7,20 +7,37 @@ import (
 // Wallet represents a wallet.
 type Wallet struct {
 	seed         []byte
+	isBip39      bool
 	accounts     map[string]*Account
 	RPC, RPCWork rpc.Client
 }
 
 // NewWallet creates a new wallet.
 func NewWallet(seed []byte) (w *Wallet, err error) {
-	w = &Wallet{
+	w = newWallet(seed)
+	err = w.scanForAccounts()
+	return
+}
+
+// NewBip39Wallet creates a new BIP39 wallet.
+func NewBip39Wallet(mnemonic, password string) (w *Wallet, err error) {
+	seed, err := newBip39Seed(mnemonic, password)
+	if err != nil {
+		return
+	}
+	w = newWallet(seed)
+	w.isBip39 = true
+	err = w.scanForAccounts()
+	return
+}
+
+func newWallet(seed []byte) *Wallet {
+	return &Wallet{
 		seed:     seed,
 		accounts: make(map[string]*Account),
 		RPC:      rpc.Client{URL: "https://mynano.ninja/api/node"},
 		RPCWork:  rpc.Client{URL: "http://[::1]:7076"},
 	}
-	err = w.scanForAccounts()
-	return
 }
 
 func (w *Wallet) scanForAccounts() (err error) {
@@ -51,7 +68,12 @@ func (w *Wallet) scanForAccounts() (err error) {
 
 // NewAccount creates a new account.
 func (w *Wallet) NewAccount() (a *Account, err error) {
-	key, err := deriveKey(w.seed, uint32(len(w.accounts)))
+	var key []byte
+	if w.isBip39 {
+		key, err = deriveBip39Key(w.seed, uint32(len(w.accounts)))
+	} else {
+		key, err = deriveKey(w.seed, uint32(len(w.accounts)))
+	}
 	if err != nil {
 		return
 	}

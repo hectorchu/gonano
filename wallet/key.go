@@ -6,7 +6,9 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"github.com/hectorchu/gonano/wallet/bip32"
 	"github.com/hectorchu/gonano/wallet/ed25519"
+	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -81,4 +83,21 @@ func addressToPubkey(address string) (pubkey []byte, err error) {
 		err = errors.New("checksum mismatch")
 	}
 	return
+}
+
+func newBip39Seed(mnemonic, password string) (seed []byte, err error) {
+	return bip39.NewSeedWithErrorChecking(mnemonic, password)
+}
+
+func deriveBip39Key(seed []byte, index uint32) (key []byte, err error) {
+	key2, err := bip32.NewMasterKey(seed)
+	if err != nil {
+		return
+	}
+	for _, i := range []uint32{44, 165, index} {
+		if key2, err = key2.NewChildKey(i + 0x80000000); err != nil {
+			return
+		}
+	}
+	return key2.Key, nil
 }
