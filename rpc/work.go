@@ -10,8 +10,12 @@ func (c *Client) WorkCancel(hash BlockHash) (err error) {
 
 // WorkGenerate generates work for block. hash is the frontier of the account
 // or in the case of an open block, the public key representation of the account.
-func (c *Client) WorkGenerate(hash BlockHash) (work, difficulty HexData, multiplier float64, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "work_generate", "hash": hash})
+func (c *Client) WorkGenerate(hash BlockHash, difficulty HexData) (
+	work, difficulty2 HexData, multiplier float64, err error,
+) {
+	resp, err := c.send(map[string]interface{}{
+		"action": "work_generate", "hash": hash, "difficulty": difficulty,
+	})
 	if err != nil {
 		return
 	}

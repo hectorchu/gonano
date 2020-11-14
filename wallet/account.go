@@ -57,7 +57,7 @@ func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err
 	if err = a.sign(block); err != nil {
 		return
 	}
-	if block.Work, _, _, err = a.w.RPCWork.WorkGenerate(info.Frontier); err != nil {
+	if block.Work, err = a.w.workGenerate(info.Frontier); err != nil {
 		return
 	}
 	return a.w.RPC.Process(block, "send")
@@ -103,7 +103,7 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 		if err = a.sign(block); err != nil {
 			return err
 		}
-		if block.Work, _, _, err = a.w.RPCWork.WorkGenerate(workHash); err != nil {
+		if block.Work, err = a.w.workGenerateReceive(workHash); err != nil {
 			return err
 		}
 		if info.Frontier, err = a.w.RPC.Process(block, "receive"); err != nil {
@@ -130,7 +130,7 @@ func (a *Account) ChangeRep(representative string) (hash rpc.BlockHash, err erro
 	if err = a.sign(block); err != nil {
 		return
 	}
-	if block.Work, _, _, err = a.w.RPCWork.WorkGenerate(info.Frontier); err != nil {
+	if block.Work, err = a.w.workGenerate(info.Frontier); err != nil {
 		return
 	}
 	return a.w.RPC.Process(block, "change")
