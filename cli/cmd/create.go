@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -19,11 +18,8 @@ var createCmd = &cobra.Command{
 		fmt.Println()
 		fatalIf(err)
 		wi := &walletInfo{Seed: string(seed)}
-		wi.init()
-		viper.Set(fmt.Sprintf("wallets.%d", len(wallets)), wi)
 		wallets = append(wallets, wi)
-		err = viper.WriteConfig()
-		fatalIf(err)
+		wi.init()
 		fmt.Println("Added wallet.")
 	},
 }

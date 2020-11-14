@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/hex"
 	"fmt"
+	"sort"
 
 	"github.com/hectorchu/gonano/wallet"
 	"github.com/spf13/cobra"
@@ -25,9 +26,12 @@ type walletInfo struct {
 }
 
 var wallets []*walletInfo
+var walletIndex int
+var walletAccount string
 
 func init() {
 	rootCmd.AddCommand(walletCmd)
+	walletCmd.PersistentFlags().IntVarP(&walletIndex, "wallet-index", "i", -1, "Index of the wallet to use")
 }
 
 func initWallets() {
@@ -38,6 +42,13 @@ func initWallets() {
 			Seed:     viper.GetString(fmt.Sprintf("wallets.%d.seed", i)),
 			Accounts: viper.GetStringSlice(fmt.Sprintf("wallets.%d.accounts", i)),
 		}
+		sort.Strings(wallets[i].Accounts)
+	}
+}
+
+func checkWalletIndex() {
+	if walletIndex < 0 || walletIndex >= len(wallets) {
+		fatal("wallet index out of range")
 	}
 }
 
@@ -69,9 +80,18 @@ func (wi *walletInfo) init() {
 			newBip39Wallet()
 		}
 	}
+	wi.Accounts = nil
 	for _, account := range wi.w.GetAccounts() {
 		wi.Accounts = append(wi.Accounts, account.Address())
 	}
+	sort.Strings(wi.Accounts)
 	fmt.Printf("%d account(s) found.\n", len(wi.Accounts))
+	for i := range wallets {
+		if wi == wallets[i] {
+			viper.Set(fmt.Sprintf("wallets.%d", i), wi)
+			err := viper.WriteConfig()
+			fatalIf(err)
+		}
+	}
 	return
 }

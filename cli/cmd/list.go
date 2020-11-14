@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"math/big"
 
+	"github.com/hectorchu/gonano/rpc"
+	"github.com/hectorchu/gonano/wallet"
 	"github.com/spf13/cobra"
 )
 
@@ -12,8 +15,25 @@ var listCmd = &cobra.Command{
 	Short: "List wallets",
 	Long:  `List wallets.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for i, wi := range wallets {
-			fmt.Printf("%d: %d account(s)\n", i, len(wi.Accounts))
+		if walletIndex < 0 {
+			for i, wi := range wallets {
+				fmt.Printf("%d: %d account(s)\n", i, len(wi.Accounts))
+			}
+			return
+		}
+		checkWalletIndex()
+		rpc := rpc.Client{URL: "https://mynano.ninja/api/node"}
+		for _, account := range wallets[walletIndex].Accounts {
+			balance, pending, err := rpc.AccountBalance(account)
+			fatalIf(err)
+			fmt.Print(account)
+			if balance.Int.Cmp(&big.Int{}) > 0 {
+				fmt.Printf(" %s", wallet.NanoAmount{Raw: &balance.Int})
+			}
+			if pending.Int.Cmp(&big.Int{}) > 0 {
+				fmt.Printf(" (+ %s pending)", wallet.NanoAmount{Raw: &pending.Int})
+			}
+			fmt.Println()
 		}
 	},
 }
