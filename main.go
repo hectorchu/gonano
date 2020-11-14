@@ -1,6 +1,6 @@
 package main
 
-import "github.com/hectorchu/gonano/cli/cmd"
+import "github.com/hectorchu/gonano/cmd"
 
 func main() {
 	cmd.Execute()
