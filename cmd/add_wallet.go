@@ -6,11 +6,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create a wallet",
-	Long:  `Create a wallet with a supplied or random seed.`,
+var addWalletCmd = &cobra.Command{
+	Use:   "wallet",
+	Short: "Add a wallet with a supplied or random seed",
 	Run: func(cmd *cobra.Command, args []string) {
 		seed := readPassword("Enter seed or bip39 mnemonic (leave blank for random): ")
 		wi := &walletInfo{Seed: string(seed)}
@@ -21,5 +19,5 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	walletCmd.AddCommand(createCmd)
+	addCmd.AddCommand(addWalletCmd)
 }

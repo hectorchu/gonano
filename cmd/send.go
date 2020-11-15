@@ -13,24 +13,23 @@ import (
 // sendCmd represents the send command
 var sendCmd = &cobra.Command{
 	Use:   "send",
-	Short: "Send from a wallet",
-	Long: `Send an amount of Nano from a wallet account.
+	Short: "Send an amount of Nano from an account",
+	Long: `Send an amount of Nano from an account.
 
 send <destination> <amount>`,
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		if walletIndex < 0 {
-			for i, wi := range wallets {
-				if sort.SearchStrings(wi.Accounts, walletAccount) < len(wi.Accounts) {
-					walletIndex = i
-					break
-				}
-			}
-			if walletIndex < 0 {
-				fatal("account not found in any wallet")
+		for i, wi := range wallets {
+			if sort.SearchStrings(wi.Accounts, walletAccount) < len(wi.Accounts) {
+				walletIndex = i
+				break
 			}
 		}
+		if walletIndex < 0 {
+			fatal("account not found in any wallet")
+		}
 		checkWalletIndex()
+		checkWalletAccount()
 		wi := wallets[walletIndex]
 		wi.init()
 		account := wi.w.GetAccount(walletAccount)
@@ -46,7 +45,5 @@ send <destination> <amount>`,
 }
 
 func init() {
-	walletCmd.AddCommand(sendCmd)
-	sendCmd.Flags().StringVarP(&walletAccount, "account", "a", "", "Account to send from")
-	sendCmd.MarkFlagRequired("account")
+	rootCmd.AddCommand(sendCmd)
 }

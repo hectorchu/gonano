@@ -12,7 +12,6 @@ import (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gonano",
 	Short: "A Nano wallet written in Go",
@@ -40,6 +39,8 @@ func fatalIf(err ...interface{}) {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gonano.yaml)")
+	rootCmd.PersistentFlags().IntVarP(&walletIndex, "wallet", "w", -1, "Index of the wallet to use")
+	rootCmd.PersistentFlags().StringVarP(&walletAccount, "account", "a", "", "Account to operate on")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -61,9 +62,7 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	} else {
+	if err := viper.ReadInConfig(); err != nil {
 		err = viper.SafeWriteConfig()
 		fatalIf(err)
 	}

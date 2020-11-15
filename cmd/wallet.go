@@ -8,17 +8,9 @@ import (
 
 	"github.com/hectorchu/gonano/rpc"
 	"github.com/hectorchu/gonano/wallet"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tyler-smith/go-bip39"
 )
-
-// walletCmd represents the wallet command
-var walletCmd = &cobra.Command{
-	Use:   "wallet",
-	Short: "Wallet management",
-	Long:  `Commands for managing wallets.`,
-}
 
 type walletInfo struct {
 	w          *wallet.Wallet
@@ -31,11 +23,6 @@ var wallets []*walletInfo
 var walletIndex int
 var walletAccount string
 var rpcClient = rpc.Client{URL: "https://mynano.ninja/api/node"}
-
-func init() {
-	rootCmd.AddCommand(walletCmd)
-	walletCmd.PersistentFlags().IntVarP(&walletIndex, "wallet-index", "i", -1, "Index of the wallet to use")
-}
 
 func initWallets() {
 	v := viper.GetStringMap("wallets")
@@ -55,8 +42,16 @@ func initWallets() {
 }
 
 func checkWalletIndex() {
-	if walletIndex < 0 || walletIndex >= len(wallets) {
+	if walletIndex < 0 {
+		fatal("wallet index (-w) not specified")
+	} else if walletIndex >= len(wallets) {
 		fatal("wallet index out of range")
+	}
+}
+
+func checkWalletAccount() {
+	if walletAccount == "" {
+		fatal("wallet account (-a) not specified")
 	}
 }
 
@@ -134,12 +129,22 @@ func (wi *walletInfo) initBip39(entropy, password []byte) {
 }
 
 func (wi *walletInfo) initAccounts() {
-	wi.Accounts = nil
-	for _, account := range wi.w.GetAccounts() {
-		wi.Accounts = append(wi.Accounts, account.Address())
+	accounts := make(map[string]bool)
+	for _, account := range wi.Accounts {
+		accounts[account] = true
 	}
+	for _, account := range wi.w.GetAccounts() {
+		accounts[account.Address()] = true
+	}
+	wi.Accounts = nil
+	for account := range accounts {
+		wi.Accounts = append(wi.Accounts, account)
+	}
+	wi.save()
+}
+
+func (wi *walletInfo) save() {
 	sort.Strings(wi.Accounts)
-	fmt.Printf("%d account(s) found.\n", len(wi.Accounts))
 	for i := range wallets {
 		if wi == wallets[i] {
 			viper.Set(fmt.Sprintf("wallets.%d", i), wi)
