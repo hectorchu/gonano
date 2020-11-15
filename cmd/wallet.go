@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"sort"
@@ -10,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tyler-smith/go-bip39"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 // walletCmd represents the wallet command
@@ -21,9 +21,10 @@ var walletCmd = &cobra.Command{
 }
 
 type walletInfo struct {
-	w        *wallet.Wallet
-	Seed     string
-	Accounts []string
+	w          *wallet.Wallet
+	Seed, Salt string
+	IsBip39    bool
+	Accounts   []string
 }
 
 var wallets []*walletInfo
@@ -40,9 +41,14 @@ func initWallets() {
 	v := viper.GetStringMap("wallets")
 	wallets = make([]*walletInfo, len(v))
 	for i := range wallets {
+		fmt := func(key string) string {
+			return fmt.Sprintf("wallets.%d.%s", i, key)
+		}
 		wallets[i] = &walletInfo{
-			Seed:     viper.GetString(fmt.Sprintf("wallets.%d.seed", i)),
-			Accounts: viper.GetStringSlice(fmt.Sprintf("wallets.%d.accounts", i)),
+			Seed:     viper.GetString(fmt("seed")),
+			Salt:     viper.GetString(fmt("salt")),
+			IsBip39:  viper.GetBool(fmt("isbip39")),
+			Accounts: viper.GetStringSlice(fmt("accounts")),
 		}
 		sort.Strings(wallets[i].Accounts)
 	}
@@ -54,34 +60,80 @@ func checkWalletIndex() {
 	}
 }
 
-func (wi *walletInfo) init() {
-	newBip39Wallet := func() {
-		fmt.Print("Enter passphrase: ")
-		password, err := terminal.ReadPassword(0)
-		fmt.Println()
+func (wi *walletInfo) initNew() {
+	password := readPassword("Enter password: ")
+	password2 := readPassword("Re-enter password: ")
+	if !bytes.Equal(password, password2) {
+		fatal("password mismatch")
+	}
+	key, salt, err := deriveKey(password, nil)
+	fatalIf(err)
+	wi.Salt = hex.EncodeToString(salt)
+	initBip39 := func(entropy []byte) {
+		enc, err := encrypt(entropy, key)
 		fatalIf(err)
-		wi.w, err = wallet.NewBip39Wallet(wi.Seed, string(password))
-		fatalIf(err)
+		wi.Seed = hex.EncodeToString(enc)
+		wi.IsBip39 = true
+		wi.initBip39(entropy, password)
 	}
 	if wi.Seed == "" {
 		entropy, err := bip39.NewEntropy(256)
 		fatalIf(err)
-		wi.Seed, err = bip39.NewMnemonic(entropy)
+		mnemonic, err := bip39.NewMnemonic(entropy)
 		fatalIf(err)
-		newBip39Wallet()
-		fmt.Println("Your secret words are:", wi.Seed)
+		fmt.Println("Your secret words are:", mnemonic)
+		initBip39(entropy)
 	} else {
 		seed, err := hex.DecodeString(wi.Seed)
 		if err == nil {
-			if len(seed) != 32 {
-				fatal("invalid seed length")
-			}
-			wi.w, err = wallet.NewWallet(seed)
+			enc, err := encrypt(seed, key)
 			fatalIf(err)
+			wi.Seed = hex.EncodeToString(enc)
+			wi.initRegularSeed(seed)
 		} else {
-			newBip39Wallet()
+			entropy, err := bip39.EntropyFromMnemonic(wi.Seed)
+			fatalIf(err)
+			initBip39(entropy)
 		}
 	}
+	wi.initAccounts()
+}
+
+func (wi *walletInfo) init() {
+	password := readPassword("Enter password: ")
+	enc, err := hex.DecodeString(wi.Seed)
+	fatalIf(err)
+	salt, err := hex.DecodeString(wi.Salt)
+	fatalIf(err)
+	key, _, err := deriveKey(password, salt)
+	fatalIf(err)
+	seed, err := decrypt(enc, key)
+	fatalIf(err)
+	if wi.IsBip39 {
+		wi.initBip39(seed, password)
+	} else {
+		wi.initRegularSeed(seed)
+	}
+	wi.initAccounts()
+}
+
+func (wi *walletInfo) initRegularSeed(seed []byte) {
+	if len(seed) != 32 {
+		fatal("invalid seed length")
+	}
+	var err error
+	wi.w, err = wallet.NewWallet(seed)
+	fatalIf(err)
+}
+
+func (wi *walletInfo) initBip39(entropy, password []byte) {
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	fatalIf(err)
+	wi.w, err = wallet.NewBip39Wallet(mnemonic, string(password))
+	fatalIf(err)
+}
+
+func (wi *walletInfo) initAccounts() {
 	wi.Accounts = nil
 	for _, account := range wi.w.GetAccounts() {
 		wi.Accounts = append(wi.Accounts, account.Address())
@@ -95,5 +147,4 @@ func (wi *walletInfo) init() {
 			fatalIf(err)
 		}
 	}
-	return
 }
