@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/hectorchu/gonano/rpc"
 	"github.com/hectorchu/gonano/wallet"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,6 +29,7 @@ type walletInfo struct {
 var wallets []*walletInfo
 var walletIndex int
 var walletAccount string
+var rpcClient = rpc.Client{URL: "https://mynano.ninja/api/node"}
 
 func init() {
 	rootCmd.AddCommand(walletCmd)
