@@ -86,11 +86,12 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 	if err != nil {
 		info.Balance = &rpc.RawAmount{}
 		info.Representative = "nano_1stofnrxuz3cai7ze75o174bpm7scwj9jn3nxsn8ntzg784jf1gzn1jjdkou"
+		err = nil
 	}
 	for hash, pending := range pendings {
-		link, err := hex.DecodeString(hash)
-		if err != nil {
-			return err
+		var link rpc.BlockHash
+		if link, err = hex.DecodeString(hash); err != nil {
+			return
 		}
 		workHash := info.Frontier
 		if info.Frontier == nil {
@@ -107,13 +108,13 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 			Link:           link,
 		}
 		if err = a.sign(block); err != nil {
-			return err
+			return
 		}
 		if block.Work, err = a.w.workGenerateReceive(workHash); err != nil {
-			return err
+			return
 		}
 		if info.Frontier, err = a.w.RPC.Process(block, "receive"); err != nil {
-			return err
+			return
 		}
 	}
 	return
