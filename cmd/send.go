@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/hex"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/hectorchu/gonano/wallet"
@@ -19,23 +18,27 @@ var sendCmd = &cobra.Command{
 send <destination> <amount>`,
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		for i, wi := range wallets {
-			if sort.SearchStrings(wi.Accounts, walletAccount) < len(wi.Accounts) {
-				walletIndex = i
-				break
+		checkWalletAccount()
+		if walletIndex < 0 {
+			for i, wi := range wallets {
+				if _, ok := wi.Accounts[walletAccount]; ok {
+					walletIndex = i
+					break
+				}
+			}
+			if walletIndex < 0 {
+				fatal("account not found in any wallet")
 			}
 		}
-		if walletIndex < 0 {
-			fatal("account not found in any wallet")
-		}
 		checkWalletIndex()
-		checkWalletAccount()
 		wi := wallets[walletIndex]
 		wi.init()
-		account := wi.w.GetAccount(walletAccount)
-		if account == nil {
-			fatal("account not found in any wallet")
+		index, ok := wi.Accounts[walletAccount]
+		if !ok {
+			fatal("account not found in the specified wallet")
 		}
+		account, err := wi.w.NewAccount(&index)
+		fatalIf(err)
 		amount, err := wallet.NanoAmountFromString(args[1])
 		fatalIf(err)
 		hash, err := account.Send(args[0], amount.Raw)

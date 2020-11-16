@@ -13,6 +13,7 @@ import (
 // Account represents a wallet account.
 type Account struct {
 	w           *Wallet
+	index       uint32
 	key, pubkey []byte
 	address     string
 }
@@ -20,6 +21,11 @@ type Account struct {
 // Address returns the address of the account.
 func (a *Account) Address() string {
 	return a.address
+}
+
+// Index returns the derivation index of the account.
+func (a *Account) Index() uint32 {
+	return a.index
 }
 
 // Balance gets the confirmed and pending balances for account.

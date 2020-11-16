@@ -13,10 +13,10 @@ var listAccountCmd = &cobra.Command{
 	Short: "List accounts within a wallet",
 	Run: func(cmd *cobra.Command, args []string) {
 		checkWalletIndex()
-		for _, account := range wallets[walletIndex].Accounts {
-			balance, pending, err := rpcClient.AccountBalance(account)
+		for address := range wallets[walletIndex].Accounts {
+			balance, pending, err := rpcClient.AccountBalance(address)
 			fatalIf(err)
-			fmt.Print(account)
+			fmt.Print(address)
 			if balance.Int.Cmp(&big.Int{}) > 0 {
 				fmt.Printf(" %s", wallet.NanoAmount{Raw: &balance.Int})
 			}

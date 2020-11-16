@@ -12,9 +12,9 @@ var addAccountCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		checkWalletIndex()
 		wi := wallets[walletIndex]
-		account, err := wi.w.NewAccount()
+		account, err := wi.w.NewAccount(nil)
 		fatalIf(err)
-		wi.Accounts = append(wi.Accounts, account.Address())
+		wi.Accounts[account.Address()] = account.Index()
 		wi.save()
 		fmt.Println("Added account", account.Address())
 	},

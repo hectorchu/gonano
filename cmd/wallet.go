@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"sort"
 
 	"github.com/hectorchu/gonano/rpc"
 	"github.com/hectorchu/gonano/wallet"
@@ -16,7 +15,7 @@ type walletInfo struct {
 	w          *wallet.Wallet
 	Seed, Salt string
 	IsBip39    bool
-	Accounts   []string
+	Accounts   map[string]uint32
 }
 
 var wallets []*walletInfo
@@ -28,16 +27,18 @@ func initWallets() {
 	v := viper.GetStringMap("wallets")
 	wallets = make([]*walletInfo, len(v))
 	for i := range wallets {
-		fmt := func(key string) string {
-			return fmt.Sprintf("wallets.%d.%s", i, key)
+		key := func(s string) string {
+			return fmt.Sprintf("wallets.%d.%s", i, s)
 		}
 		wallets[i] = &walletInfo{
-			Seed:     viper.GetString(fmt("seed")),
-			Salt:     viper.GetString(fmt("salt")),
-			IsBip39:  viper.GetBool(fmt("isbip39")),
-			Accounts: viper.GetStringSlice(fmt("accounts")),
+			Seed:     viper.GetString(key("seed")),
+			Salt:     viper.GetString(key("salt")),
+			IsBip39:  viper.GetBool(key("isbip39")),
+			Accounts: make(map[string]uint32),
 		}
-		sort.Strings(wallets[i].Accounts)
+		for k, v := range viper.GetStringMap(key("accounts")) {
+			wallets[i].Accounts[k] = uint32(v.(int))
+		}
 	}
 }
 
@@ -129,22 +130,13 @@ func (wi *walletInfo) initBip39(entropy, password []byte) {
 }
 
 func (wi *walletInfo) initAccounts() {
-	accounts := make(map[string]bool)
-	for _, account := range wi.Accounts {
-		accounts[account] = true
-	}
-	for _, account := range wi.w.GetAccounts() {
-		accounts[account.Address()] = true
-	}
-	wi.Accounts = nil
-	for account := range accounts {
-		wi.Accounts = append(wi.Accounts, account)
+	for _, a := range wi.w.GetAccounts() {
+		wi.Accounts[a.Address()] = a.Index()
 	}
 	wi.save()
 }
 
 func (wi *walletInfo) save() {
-	sort.Strings(wi.Accounts)
 	for i := range wallets {
 		if wi == wallets[i] {
 			viper.Set(fmt.Sprintf("wallets.%d", i), wi)
