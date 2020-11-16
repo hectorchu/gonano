@@ -37,11 +37,11 @@ send <destination> <amount>`,
 		if !ok {
 			fatal("account not found in the specified wallet")
 		}
-		account, err := wi.w.NewAccount(&index)
+		a, err := wi.w.NewAccount(&index)
 		fatalIf(err)
 		amount, err := wallet.NanoAmountFromString(args[1])
 		fatalIf(err)
-		hash, err := account.Send(args[0], amount.Raw)
+		hash, err := a.Send(args[0], amount.Raw)
 		fatalIf(err)
 		fmt.Println(strings.ToUpper(hex.EncodeToString(hash)))
 	},

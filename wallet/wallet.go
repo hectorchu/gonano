@@ -46,11 +46,11 @@ func newWallet(seed []byte) *Wallet {
 func (w *Wallet) scanForAccounts() (err error) {
 	accounts := make([]string, 10)
 	for i := range accounts {
-		account, err := w.NewAccount(nil)
+		a, err := w.NewAccount(nil)
 		if err != nil {
 			return err
 		}
-		accounts[i] = account.Address()
+		accounts[i] = a.Address()
 	}
 	balances, err := w.RPC.AccountsBalances(accounts)
 	if err != nil {
