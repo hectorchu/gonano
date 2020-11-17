@@ -67,8 +67,8 @@ func (w *Wallet) ScanForAccounts() (err error) {
 		if frontiers[accounts[i]] != nil {
 			break
 		}
+		w.nextIndex = w.accounts[accounts[i]].index
 		delete(w.accounts, accounts[i])
-		w.nextIndex--
 	}
 	if i < 5 {
 		return
