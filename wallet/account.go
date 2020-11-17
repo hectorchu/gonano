@@ -85,7 +85,7 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 	info, err := a.w.RPC.AccountInfo(a.address)
 	if err != nil {
 		info.Balance = &rpc.RawAmount{}
-		info.Representative = "nano_1stofnrxuz3cai7ze75o174bpm7scwj9jn3nxsn8ntzg784jf1gzn1jjdkou"
+		info.Representative = "nano_3gonano8jnse4zm65jaiki9tk8ry4jtgc1smarinukho6fmbc45k3icsh6en"
 		err = nil
 	}
 	for hash, pending := range pendings {
