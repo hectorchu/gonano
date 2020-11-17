@@ -100,6 +100,9 @@ func initNewWallet() (wi *walletInfo) {
 }
 
 func (wi *walletInfo) init() {
+	if wi.w != nil {
+		return
+	}
 	password := readPassword("Enter password: ")
 	enc, err := hex.DecodeString(wi.Seed)
 	fatalIf(err)
