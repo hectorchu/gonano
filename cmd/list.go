@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 
 	"github.com/hectorchu/gonano/rpc"
@@ -26,9 +27,14 @@ var listCmd = &cobra.Command{
 			}
 		} else {
 			checkWalletIndex()
+			var accounts []string
+			for address := range wallets[walletIndex].Accounts {
+				accounts = append(accounts, address)
+			}
+			sort.Strings(accounts)
 			rpcClient := rpc.Client{URL: rpcURL}
 			var balanceSum, pendingSum big.Int
-			for address := range wallets[walletIndex].Accounts {
+			for _, address := range accounts {
 				balance, pending, err := rpcClient.AccountBalance(address)
 				fatalIf(err)
 				balanceSum.Add(&balanceSum, &balance.Int)
@@ -36,7 +42,7 @@ var listCmd = &cobra.Command{
 				fmt.Print(address)
 				printAmounts(&balance.Int, &pending.Int)
 			}
-			if len(wallets[walletIndex].Accounts) > 1 {
+			if len(accounts) > 1 {
 				fmt.Print(strings.Repeat(" ", 61), "Sum:")
 				printAmounts(&balanceSum, &pendingSum)
 			}
