@@ -18,7 +18,6 @@ type Wallet struct {
 // NewWallet creates a new wallet.
 func NewWallet(seed []byte) (w *Wallet, err error) {
 	w = newWallet(seed)
-	err = w.scanForAccounts()
 	return
 }
 
@@ -30,7 +29,6 @@ func NewBip39Wallet(mnemonic, password string) (w *Wallet, err error) {
 	}
 	w = newWallet(seed)
 	w.isBip39 = true
-	err = w.scanForAccounts()
 	return
 }
 
@@ -43,7 +41,8 @@ func newWallet(seed []byte) *Wallet {
 	}
 }
 
-func (w *Wallet) scanForAccounts() (err error) {
+// ScanForAccounts scans for accounts.
+func (w *Wallet) ScanForAccounts() (err error) {
 	accounts := make([]string, 10)
 	for i := range accounts {
 		a, err := w.NewAccount(nil)
@@ -74,7 +73,7 @@ func (w *Wallet) scanForAccounts() (err error) {
 	if i < 5 {
 		return
 	}
-	return w.scanForAccounts()
+	return w.ScanForAccounts()
 }
 
 // NewAccount creates a new account.

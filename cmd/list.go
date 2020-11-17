@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/hectorchu/gonano/rpc"
 	"github.com/hectorchu/gonano/wallet"
 	"github.com/spf13/cobra"
 )
@@ -24,6 +25,7 @@ var listCmd = &cobra.Command{
 			}
 		} else {
 			checkWalletIndex()
+			rpcClient := rpc.Client{URL: rpcURL}
 			for address := range wallets[walletIndex].Accounts {
 				balance, pending, err := rpcClient.AccountBalance(address)
 				fatalIf(err)

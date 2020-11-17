@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/hectorchu/gonano/rpc"
 	"github.com/hectorchu/gonano/wallet"
 	"github.com/spf13/viper"
 	"github.com/tyler-smith/go-bip39"
@@ -21,7 +20,6 @@ type walletInfo struct {
 var wallets []*walletInfo
 var walletIndex int
 var walletAccount string
-var rpcClient = rpc.Client{URL: "https://mynano.ninja/api/node"}
 
 func initWallets() {
 	v := viper.GetStringMap("wallets")
@@ -130,6 +128,10 @@ func (wi *walletInfo) initBip39(entropy, password []byte) {
 }
 
 func (wi *walletInfo) initAccounts() {
+	wi.w.RPC.URL = rpcURL
+	wi.w.RPCWork.URL = rpcWorkURL
+	err := wi.w.ScanForAccounts()
+	fatalIf(err)
 	for _, a := range wi.w.GetAccounts() {
 		wi.Accounts[a.Address()] = a.Index()
 	}
