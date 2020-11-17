@@ -14,6 +14,7 @@ var rescanCmd = &cobra.Command{
 		wi := wallets[walletIndex]
 		n := len(wi.Accounts)
 		wi.init()
+		wi.initAccounts()
 		n = len(wi.Accounts) - n
 		switch n {
 		case 1:

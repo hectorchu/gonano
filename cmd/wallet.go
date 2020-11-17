@@ -54,7 +54,8 @@ func checkWalletAccount() {
 	}
 }
 
-func (wi *walletInfo) initNew() {
+func initNewWallet() (wi *walletInfo) {
+	seed := string(readPassword("Enter seed or bip39 mnemonic (leave blank for random): "))
 	password := readPassword("Enter password: ")
 	password2 := readPassword("Re-enter password: ")
 	if !bytes.Equal(password, password2) {
@@ -62,7 +63,10 @@ func (wi *walletInfo) initNew() {
 	}
 	key, salt, err := deriveKey(password, nil)
 	fatalIf(err)
-	wi.Salt = hex.EncodeToString(salt)
+	wi = &walletInfo{
+		Salt:     hex.EncodeToString(salt),
+		Accounts: make(map[string]uint32),
+	}
 	initBip39 := func(entropy []byte) {
 		enc, err := encrypt(entropy, key)
 		fatalIf(err)
@@ -70,7 +74,7 @@ func (wi *walletInfo) initNew() {
 		wi.IsBip39 = true
 		wi.initBip39(entropy, password)
 	}
-	if wi.Seed == "" {
+	if seed == "" {
 		entropy, err := bip39.NewEntropy(256)
 		fatalIf(err)
 		mnemonic, err := bip39.NewMnemonic(entropy)
@@ -78,19 +82,21 @@ func (wi *walletInfo) initNew() {
 		fmt.Println("Your secret words are:", mnemonic)
 		initBip39(entropy)
 	} else {
-		seed, err := hex.DecodeString(wi.Seed)
+		seed2, err := hex.DecodeString(seed)
 		if err == nil {
-			enc, err := encrypt(seed, key)
+			enc, err := encrypt(seed2, key)
 			fatalIf(err)
 			wi.Seed = hex.EncodeToString(enc)
-			wi.initRegularSeed(seed)
+			wi.initRegularSeed(seed2)
 		} else {
-			entropy, err := bip39.EntropyFromMnemonic(wi.Seed)
+			entropy, err := bip39.EntropyFromMnemonic(seed)
 			fatalIf(err)
 			initBip39(entropy)
 		}
 	}
+	wallets = append(wallets, wi)
 	wi.initAccounts()
+	return
 }
 
 func (wi *walletInfo) init() {
@@ -108,7 +114,6 @@ func (wi *walletInfo) init() {
 	} else {
 		wi.initRegularSeed(seed)
 	}
-	wi.initAccounts()
 }
 
 func (wi *walletInfo) initRegularSeed(seed []byte) {
@@ -118,6 +123,8 @@ func (wi *walletInfo) initRegularSeed(seed []byte) {
 	var err error
 	wi.w, err = wallet.NewWallet(seed)
 	fatalIf(err)
+	wi.w.RPC.URL = rpcURL
+	wi.w.RPCWork.URL = rpcWorkURL
 }
 
 func (wi *walletInfo) initBip39(entropy, password []byte) {
@@ -125,11 +132,11 @@ func (wi *walletInfo) initBip39(entropy, password []byte) {
 	fatalIf(err)
 	wi.w, err = wallet.NewBip39Wallet(mnemonic, string(password))
 	fatalIf(err)
+	wi.w.RPC.URL = rpcURL
+	wi.w.RPCWork.URL = rpcWorkURL
 }
 
 func (wi *walletInfo) initAccounts() {
-	wi.w.RPC.URL = rpcURL
-	wi.w.RPCWork.URL = rpcWorkURL
 	err := wi.w.ScanForAccounts()
 	fatalIf(err)
 	for _, a := range wi.w.GetAccounts() {
