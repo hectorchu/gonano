@@ -145,3 +145,28 @@ func (wi *walletInfo) save() {
 		}
 	}
 }
+
+func getAccount() (a *wallet.Account) {
+	checkWalletAccount()
+	if walletIndex < 0 {
+		for i, wi := range wallets {
+			if _, ok := wi.Accounts[walletAccount]; ok {
+				walletIndex = i
+				break
+			}
+		}
+		if walletIndex < 0 {
+			fatal("account not found in any wallet")
+		}
+	}
+	checkWalletIndex()
+	wi := wallets[walletIndex]
+	wi.init()
+	index, ok := wi.Accounts[walletAccount]
+	if !ok {
+		fatal("account not found in the specified wallet")
+	}
+	a, err := wi.w.NewAccount(&index)
+	fatalIf(err)
+	return
+}
