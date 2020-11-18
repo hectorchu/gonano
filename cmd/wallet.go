@@ -103,15 +103,21 @@ func (wi *walletInfo) init() {
 	if wi.w != nil {
 		return
 	}
-	password := readPassword("Enter password: ")
 	enc, err := hex.DecodeString(wi.Seed)
 	fatalIf(err)
 	salt, err := hex.DecodeString(wi.Salt)
 	fatalIf(err)
+	var password []byte
 	key, _, err := deriveKey(password, salt)
 	fatalIf(err)
 	seed, err := decrypt(enc, key)
-	fatalIf(err)
+	if err != nil {
+		password = readPassword("Enter password: ")
+		key, _, err = deriveKey(password, salt)
+		fatalIf(err)
+		seed, err = decrypt(enc, key)
+		fatalIf(err)
+	}
 	if wi.IsBip39 {
 		wi.initBip39(seed, password)
 	} else {
