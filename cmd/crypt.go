@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"fmt"
+	"syscall"
 
 	"golang.org/x/crypto/scrypt"
 	"golang.org/x/crypto/ssh/terminal"
@@ -12,7 +13,7 @@ import (
 
 func readPassword(prompt string) (password []byte) {
 	fmt.Print(prompt)
-	password, err := terminal.ReadPassword(0)
+	password, err := terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Println()
 	fatalIf(err)
 	return
