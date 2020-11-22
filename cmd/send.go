@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hectorchu/gonano/wallet"
+	"github.com/hectorchu/gonano/util"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var sendCmd = &cobra.Command{
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		a := getAccount()
-		amount, err := wallet.NanoAmountFromString(args[1])
+		amount, err := util.NanoAmountFromString(args[1])
 		fatalIf(err)
 		hash, err := a.Send(args[0], amount.Raw)
 		fatalIf(err)

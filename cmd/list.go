@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/hectorchu/gonano/rpc"
-	"github.com/hectorchu/gonano/wallet"
+	"github.com/hectorchu/gonano/util"
 	"github.com/spf13/cobra"
 )
 
@@ -52,10 +52,10 @@ var listCmd = &cobra.Command{
 
 func printAmounts(balance, pending *big.Int) {
 	if balance.Cmp(&big.Int{}) > 0 {
-		fmt.Printf(" %s", wallet.NanoAmount{Raw: balance})
+		fmt.Printf(" %s", util.NanoAmount{Raw: balance})
 	}
 	if pending.Cmp(&big.Int{}) > 0 {
-		fmt.Printf(" (+ %s pending)", wallet.NanoAmount{Raw: pending})
+		fmt.Printf(" (+ %s pending)", util.NanoAmount{Raw: pending})
 	}
 	fmt.Println()
 }

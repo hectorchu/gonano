@@ -4,6 +4,7 @@ import (
 	"math/big"
 
 	"github.com/hectorchu/gonano/rpc"
+	"github.com/hectorchu/gonano/util"
 )
 
 // Wallet represents a wallet.
@@ -13,6 +14,10 @@ type Wallet struct {
 	nextIndex    uint32
 	accounts     map[string]*Account
 	RPC, RPCWork rpc.Client
+	impl         interface {
+		deriveAccount(*Account) error
+		signBlock(*Account, *rpc.Block) error
+	}
 }
 
 // NewWallet creates a new wallet.
@@ -32,12 +37,20 @@ func NewBip39Wallet(mnemonic, password string) (w *Wallet, err error) {
 	return
 }
 
+// NewLedgerWallet creates a new Ledger wallet.
+func NewLedgerWallet() (w *Wallet, err error) {
+	w = newWallet(nil)
+	w.impl = ledgerImpl{}
+	return
+}
+
 func newWallet(seed []byte) *Wallet {
 	return &Wallet{
 		seed:     seed,
 		accounts: make(map[string]*Account),
 		RPC:      rpc.Client{URL: "https://mynano.ninja/api/node"},
 		RPCWork:  rpc.Client{URL: "http://[::1]:7076"},
+		impl:     seedImpl{},
 	}
 }
 
@@ -82,20 +95,11 @@ func (w *Wallet) NewAccount(index *uint32) (a *Account, err error) {
 	if index != nil {
 		index2 = *index
 	}
-	var key []byte
-	if w.isBip39 {
-		key, err = deriveBip39Key(w.seed, index2)
-	} else {
-		key, err = deriveKey(w.seed, index2)
-	}
-	if err != nil {
-		return
-	}
 	a = &Account{w: w, index: index2}
-	if a.pubkey, a.key, err = deriveKeypair(key); err != nil {
+	if err = w.impl.deriveAccount(a); err != nil {
 		return
 	}
-	if a.address, err = deriveAddress(a.pubkey); err != nil {
+	if a.address, err = util.PubkeyToAddress(a.pubkey); err != nil {
 		return
 	}
 	if index == nil {

@@ -15,6 +15,10 @@ Command-line usage
 
 Add a wallet with a known or random seed. The seed can be of the regular Nano variety, namely a 64 character hexadecimal string. Or a BIP39 mnemonic phrase may be used, in which case the passphrase must be known (enter it as the password). Seeds are stored encrypted with the supplied password.
 
+    gonano add ledger
+
+Add a Ledger hardware wallet.
+
     gonano list
 
 Lists all the wallets that `gonano` knows about. Each wallet is indexed by a number which must be supplied as the `--wallet` (`-w`) flag when intending to operate on that wallet. For instance,
@@ -52,6 +56,7 @@ Changes the representative for an account.
 
     func NewWallet(seed []byte) (w *Wallet, err error)
     func NewBip39Wallet(mnemonic, password string) (w *Wallet, err error)
+    func NewLedgerWallet() (w *Wallet, err error)
 
 Main entrypoint to the package. The first function creates a wallet using a traditional seed, the second uses a BIP39 mnemonic and passphrase.
 

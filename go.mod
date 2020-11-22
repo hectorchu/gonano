@@ -7,6 +7,7 @@ require (
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec
 	github.com/cmars/basen v0.0.0-20150613233007-fe3947df716e // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/karalabe/hid v1.0.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect

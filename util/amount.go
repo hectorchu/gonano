@@ -1,4 +1,4 @@
-package wallet
+package util
 
 import (
 	"errors"

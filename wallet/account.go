@@ -6,8 +6,7 @@ import (
 	"math/big"
 
 	"github.com/hectorchu/gonano/rpc"
-	"github.com/hectorchu/gonano/wallet/ed25519"
-	"golang.org/x/crypto/blake2b"
+	"github.com/hectorchu/gonano/util"
 )
 
 // Account represents a wallet account.
@@ -39,7 +38,7 @@ func (a *Account) Balance() (balance, pending *big.Int, err error) {
 
 // Send sends an amount to an account.
 func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err error) {
-	link, err := addressToPubkey(account)
+	link, err := util.AddressToPubkey(account)
 	if err != nil {
 		return
 	}
@@ -60,7 +59,7 @@ func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err
 		Balance:        info.Balance,
 		Link:           link,
 	}
-	if err = a.sign(block); err != nil {
+	if err = a.w.impl.signBlock(a, block); err != nil {
 		return
 	}
 	if block.Work, err = a.w.workGenerate(info.Frontier); err != nil {
@@ -107,7 +106,7 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 			Balance:        info.Balance,
 			Link:           link,
 		}
-		if err = a.sign(block); err != nil {
+		if err = a.w.impl.signBlock(a, block); err != nil {
 			return
 		}
 		if block.Work, err = a.w.workGenerateReceive(workHash); err != nil {
@@ -134,31 +133,11 @@ func (a *Account) ChangeRep(representative string) (hash rpc.BlockHash, err erro
 		Balance:        info.Balance,
 		Link:           make(rpc.BlockHash, 32),
 	}
-	if err = a.sign(block); err != nil {
+	if err = a.w.impl.signBlock(a, block); err != nil {
 		return
 	}
 	if block.Work, err = a.w.workGenerate(info.Frontier); err != nil {
 		return
 	}
 	return a.w.RPC.Process(block, "change")
-}
-
-func (a *Account) sign(block *rpc.Block) (err error) {
-	hash, err := blake2b.New256(nil)
-	if err != nil {
-		return
-	}
-	hash.Write(make([]byte, 31))
-	hash.Write([]byte{6})
-	hash.Write(a.pubkey)
-	hash.Write(block.Previous)
-	pubkey, err := addressToPubkey(block.Representative)
-	if err != nil {
-		return
-	}
-	hash.Write(pubkey)
-	hash.Write(block.Balance.FillBytes(make([]byte, 16)))
-	hash.Write(block.Link)
-	block.Signature = ed25519.Sign(a.key, hash.Sum(nil))
-	return
 }

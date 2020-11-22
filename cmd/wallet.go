@@ -11,10 +11,10 @@ import (
 )
 
 type walletInfo struct {
-	w          *wallet.Wallet
-	Seed, Salt string
-	IsBip39    bool
-	Accounts   map[string]uint32
+	w                 *wallet.Wallet
+	Seed, Salt        string
+	IsBip39, IsLedger bool
+	Accounts          map[string]uint32
 }
 
 var wallets []*walletInfo
@@ -32,6 +32,7 @@ func initWallets() {
 			Seed:     viper.GetString(key("seed")),
 			Salt:     viper.GetString(key("salt")),
 			IsBip39:  viper.GetBool(key("isbip39")),
+			IsLedger: viper.GetBool(key("isledger")),
 			Accounts: make(map[string]uint32),
 		}
 		for k, v := range viper.GetStringMap(key("accounts")) {
@@ -63,10 +64,7 @@ func initNewWallet() (wi *walletInfo) {
 	}
 	key, salt, err := deriveKey(password, nil)
 	fatalIf(err)
-	wi = &walletInfo{
-		Salt:     hex.EncodeToString(salt),
-		Accounts: make(map[string]uint32),
-	}
+	wi = &walletInfo{Salt: hex.EncodeToString(salt)}
 	initBip39 := func(entropy []byte) {
 		enc, err := encrypt(entropy, key)
 		fatalIf(err)
@@ -101,6 +99,10 @@ func initNewWallet() (wi *walletInfo) {
 
 func (wi *walletInfo) init() {
 	if wi.w != nil {
+		return
+	}
+	if wi.IsLedger {
+		wi.initLedger()
 		return
 	}
 	enc, err := hex.DecodeString(wi.Seed)
@@ -145,9 +147,20 @@ func (wi *walletInfo) initBip39(entropy, password []byte) {
 	wi.w.RPCWork.URL = rpcWorkURL
 }
 
+func (wi *walletInfo) initLedger() {
+	var err error
+	wi.w, err = wallet.NewLedgerWallet()
+	fatalIf(err)
+	wi.w.RPC.URL = rpcURL
+	wi.w.RPCWork.URL = rpcWorkURL
+}
+
 func (wi *walletInfo) initAccounts() {
 	err := wi.w.ScanForAccounts()
 	fatalIf(err)
+	if wi.Accounts == nil {
+		wi.Accounts = make(map[string]uint32)
+	}
 	for _, a := range wi.w.GetAccounts() {
 		wi.Accounts[a.Address()] = a.Index()
 	}
