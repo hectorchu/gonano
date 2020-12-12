@@ -13,16 +13,16 @@ require (
 	github.com/mitchellh/mapstructure v1.4.0 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/robvanmieghem/go-opencl v0.0.0-20160201165807-5ca28f1a8220
-	github.com/spf13/afero v1.4.1 // indirect
+	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/tyler-smith/go-bip39 v1.1.0
-	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
-	golang.org/x/sys v0.0.0-20201201145000-ef89a241ccb3 // indirect
-	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
+	golang.org/x/sys v0.0.0-20201211090839-8ad439b19e0f // indirect
+	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
