@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
+	"strings"
 )
 
 // AccountHistory reports send/receive information within a block.
@@ -71,7 +72,7 @@ type BlockHash []byte
 
 // MarshalJSON returns the JSON encoding of h.
 func (h BlockHash) MarshalJSON() ([]byte, error) {
-	return json.Marshal(hex.EncodeToString(h))
+	return json.Marshal(strings.ToUpper(hex.EncodeToString(h)))
 }
 
 // UnmarshalJSON sets *h to a copy of data.
