@@ -11,10 +11,11 @@ import (
 
 // Account represents a wallet account.
 type Account struct {
-	w           *Wallet
-	index       uint32
-	key, pubkey []byte
-	address     string
+	w              *Wallet
+	index          uint32
+	key, pubkey    []byte
+	address        string
+	representative string
 }
 
 // Address returns the address of the account.
@@ -46,16 +47,18 @@ func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err
 	if err != nil {
 		return
 	}
+	if a.representative == "" {
+		a.representative = info.Representative
+	}
 	info.Balance.Sub(&info.Balance.Int, amount)
 	if info.Balance.Cmp(&big.Int{}) < 0 {
-		err = errors.New("insufficient funds")
-		return
+		return nil, errors.New("insufficient funds")
 	}
 	block := &rpc.Block{
 		Type:           "state",
 		Account:        a.address,
 		Previous:       info.Frontier,
-		Representative: info.Representative,
+		Representative: a.representative,
 		Balance:        info.Balance,
 		Link:           link,
 	}
@@ -87,6 +90,9 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 		info.Representative = "nano_3gonano8jnse4zm65jaiki9tk8ry4jtgc1smarinukho6fmbc45k3icsh6en"
 		err = nil
 	}
+	if a.representative == "" {
+		a.representative = info.Representative
+	}
 	for hash, pending := range pendings {
 		var link rpc.BlockHash
 		if link, err = hex.DecodeString(hash); err != nil {
@@ -102,7 +108,7 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 			Type:           "state",
 			Account:        a.address,
 			Previous:       info.Frontier,
-			Representative: info.Representative,
+			Representative: a.representative,
 			Balance:        info.Balance,
 			Link:           link,
 		}
@@ -116,6 +122,15 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 			return
 		}
 	}
+	return
+}
+
+// SetRep sets the account's representative for future blocks.
+func (a *Account) SetRep(representative string) (err error) {
+	if _, err = util.AddressToPubkey(representative); err != nil {
+		return
+	}
+	a.representative = representative
 	return
 }
 
@@ -139,5 +154,8 @@ func (a *Account) ChangeRep(representative string) (hash rpc.BlockHash, err erro
 	if block.Work, err = a.w.workGenerate(info.Frontier); err != nil {
 		return
 	}
-	return a.w.RPC.Process(block, "change")
+	if hash, err = a.w.RPC.Process(block, "change"); err == nil {
+		a.representative = representative
+	}
+	return
 }
