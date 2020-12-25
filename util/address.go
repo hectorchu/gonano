@@ -41,6 +41,9 @@ func AddressToPubkey(address string) (pubkey []byte, err error) {
 
 // PubkeyToAddress converts pubkey to an address.
 func PubkeyToAddress(pubkey []byte) (address string, err error) {
+	if len(pubkey) != 32 {
+		return "", errors.New("invalid pubkey length")
+	}
 	checksum, err := checksum(pubkey)
 	if err != nil {
 		return
