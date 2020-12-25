@@ -80,6 +80,20 @@ func (a *Account) ReceivePendings() (err error) {
 	return a.receivePendings(pendings[a.address])
 }
 
+// ReceivePending pockets the specified link block.
+func (a *Account) ReceivePending(link rpc.BlockHash) (hash rpc.BlockHash, err error) {
+	info, err := a.w.RPC.AccountInfo(a.address)
+	if err != nil {
+		info.Balance = &rpc.RawAmount{}
+	}
+	block, err := a.w.RPC.BlockInfo(link)
+	if err != nil {
+		return
+	}
+	info.Balance.Add(&info.Balance.Int, &block.Amount.Int)
+	return a.receivePending(info, link)
+}
+
 func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 	if len(pendings) == 0 {
 		return
@@ -87,42 +101,47 @@ func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
 	info, err := a.w.RPC.AccountInfo(a.address)
 	if err != nil {
 		info.Balance = &rpc.RawAmount{}
-		info.Representative = "nano_3gonano8jnse4zm65jaiki9tk8ry4jtgc1smarinukho6fmbc45k3icsh6en"
-		err = nil
-	}
-	if a.representative == "" {
-		a.representative = info.Representative
 	}
 	for hash, pending := range pendings {
 		var link rpc.BlockHash
 		if link, err = hex.DecodeString(hash); err != nil {
 			return
 		}
-		workHash := info.Frontier
-		if info.Frontier == nil {
-			info.Frontier = make(rpc.BlockHash, 32)
-			workHash = a.pubkey
-		}
 		info.Balance.Add(&info.Balance.Int, &pending.Amount.Int)
-		block := &rpc.Block{
-			Type:           "state",
-			Account:        a.address,
-			Previous:       info.Frontier,
-			Representative: a.representative,
-			Balance:        info.Balance,
-			Link:           link,
-		}
-		if err = a.w.impl.signBlock(a, block); err != nil {
-			return
-		}
-		if block.Work, err = a.w.workGenerateReceive(workHash); err != nil {
-			return
-		}
-		if info.Frontier, err = a.w.RPC.Process(block, "receive"); err != nil {
+		if info.Frontier, err = a.receivePending(info, link); err != nil {
 			return
 		}
 	}
 	return
+}
+
+func (a *Account) receivePending(info rpc.AccountInfo, link rpc.BlockHash) (hash rpc.BlockHash, err error) {
+	workHash := info.Frontier
+	if info.Frontier == nil {
+		info.Frontier = make(rpc.BlockHash, 32)
+		workHash = a.pubkey
+	}
+	if a.representative == "" {
+		a.representative = info.Representative
+		if a.representative == "" {
+			a.representative = "nano_3gonano8jnse4zm65jaiki9tk8ry4jtgc1smarinukho6fmbc45k3icsh6en"
+		}
+	}
+	block := &rpc.Block{
+		Type:           "state",
+		Account:        a.address,
+		Previous:       info.Frontier,
+		Representative: a.representative,
+		Balance:        info.Balance,
+		Link:           link,
+	}
+	if err = a.w.impl.signBlock(a, block); err != nil {
+		return
+	}
+	if block.Work, err = a.w.workGenerateReceive(workHash); err != nil {
+		return
+	}
+	return a.w.RPC.Process(block, "receive")
 }
 
 // SetRep sets the account's representative for future blocks.
