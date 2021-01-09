@@ -244,6 +244,10 @@ func (c *Client) Ledger(account string, count int64, modifiedSince time.Time) (a
 	if err != nil {
 		return
 	}
+	var u struct{ Accounts string }
+	if err = json.Unmarshal(resp, &u); err == nil && u.Accounts == "" {
+		return
+	}
 	var v struct{ Accounts map[string]AccountInfo }
 	err = json.Unmarshal(resp, &v)
 	return v.Accounts, err
