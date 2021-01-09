@@ -1,6 +1,7 @@
 package rpc_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,5 +27,6 @@ func TestActiveDifficulty(t *testing.T) {
 func TestAvailableSupply(t *testing.T) {
 	available, err := getClient().AvailableSupply()
 	require.Nil(t, err)
-	assertEqualBig(t, "133246497546603000000000000000000000000", &available.Int)
+	expectedSupply, _ := new(big.Int).SetString("133246497000000000000000000000000000000", 10)
+	assert.True(t, available.Cmp(expectedSupply) > 0)
 }

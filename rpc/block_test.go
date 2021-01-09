@@ -2,7 +2,6 @@ package rpc_test
 
 import (
 	"encoding/hex"
-	"strings"
 	"testing"
 
 	"github.com/hectorchu/gonano/rpc"
@@ -77,7 +76,7 @@ func TestBlocksInfo(t *testing.T) {
 	blocks, err := getClient().BlocksInfo([]rpc.BlockHash{hexString(testBlockInfoHash)})
 	require.Nil(t, err)
 	assert.Len(t, blocks, 1)
-	testBlockInfo(t, blocks[strings.ToLower(testBlockInfoHash)])
+	testBlockInfo(t, blocks[testBlockInfoHash])
 }
 
 func TestChain(t *testing.T) {
