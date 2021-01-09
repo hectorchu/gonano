@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"encoding/json"
+	"time"
 )
 
 // AccountBalance returns how many RAW is owned and how many have not yet been received by account.
@@ -230,11 +231,12 @@ func (c *Client) Frontiers(account string, count int64) (frontiers map[string]Bl
 
 // Ledger returns frontier, open block, change representative block, balance, last
 // modified timestamp from local database & block count starting at account up to count.
-func (c *Client) Ledger(account string, count int64) (accounts map[string]AccountInfo, err error) {
+func (c *Client) Ledger(account string, count int64, modifiedSince time.Time) (accounts map[string]AccountInfo, err error) {
 	resp, err := c.send(map[string]interface{}{
 		"action":         "ledger",
 		"account":        account,
 		"count":          count,
+		"modified_since": modifiedSince.Unix(),
 		"representative": true,
 		"weight":         true,
 		"pending":        true,
