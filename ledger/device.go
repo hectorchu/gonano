@@ -9,6 +9,8 @@ import (
 	"github.com/karalabe/hid"
 )
 
+const okResponse = 0x9000
+
 func getDevice() (d *hid.Device, err error) {
 	const vendorID = 0x2c97
 
@@ -94,8 +96,7 @@ func send(d io.ReadWriter, payload []byte) ([]byte, error) {
 		r = r[copy(r, p):]
 	}
 
-	// nolint: gomnd // TODO - determine what 0x9000 is
-	if sw := binary.BigEndian.Uint16(resp[len(resp)-2:]); sw != 0x9000 {
+	if sw := binary.BigEndian.Uint16(resp[len(resp)-2:]); sw != okResponse {
 		return nil, fmt.Errorf("invalid status %x", sw)
 	}
 
