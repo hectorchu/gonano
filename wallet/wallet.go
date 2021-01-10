@@ -1,6 +1,8 @@
+// Package wallet provides nano wallet functionality
 package wallet
 
 import (
+	"context"
 	"math/big"
 
 	"github.com/hectorchu/gonano/rpc"
@@ -16,7 +18,7 @@ type Wallet struct {
 	RPC, RPCWork rpc.Client
 	impl         interface {
 		deriveAccount(*Account) error
-		signBlock(*Account, *rpc.Block) error
+		signBlock(context.Context, *Account, *rpc.Block) error
 	}
 }
 
@@ -32,8 +34,10 @@ func NewBip39Wallet(mnemonic, password string) (w *Wallet, err error) {
 	if err != nil {
 		return
 	}
+
 	w = newWallet(seed)
 	w.isBip39 = true
+
 	return
 }
 
@@ -41,6 +45,7 @@ func NewBip39Wallet(mnemonic, password string) (w *Wallet, err error) {
 func NewLedgerWallet() (w *Wallet, err error) {
 	w = newWallet(nil)
 	w.impl = ledgerImpl{}
+
 	return
 }
 
@@ -54,62 +59,87 @@ func newWallet(seed []byte) *Wallet {
 	}
 }
 
-// ScanForAccounts scans for accounts.
-func (w *Wallet) ScanForAccounts() (err error) {
-	accounts := make([]string, 10)
+func (w *Wallet) populateAccounts(accounts []string) error {
 	for i := range accounts {
 		a, err := w.NewAccount(nil)
 		if err != nil {
 			return err
 		}
+
 		accounts[i] = a.Address()
 	}
-	balances, err := w.RPC.AccountsBalances(accounts)
+
+	return nil
+}
+
+// ScanForAccounts scans for accounts.
+func (w *Wallet) ScanForAccounts(ctx context.Context) error {
+	accounts := make([]string, 10)
+
+	err := w.populateAccounts(accounts)
 	if err != nil {
-		return
+		return err
 	}
-	frontiers, err := w.RPC.AccountsFrontiers(accounts)
+
+	balances, err := w.RPC.AccountsBalances(ctx, accounts)
 	if err != nil {
-		return
+		return err
 	}
+
+	frontiers, err := w.RPC.AccountsFrontiers(ctx, accounts)
+	if err != nil {
+		return err
+	}
+
 	i := len(accounts) - 1
 	for ; i >= 0; i-- {
 		if balances[accounts[i]].Pending.Cmp(&big.Int{}) > 0 {
 			break
 		}
+
 		if frontiers[accounts[i]] != nil {
 			break
 		}
+
 		w.nextIndex = w.accounts[accounts[i]].index
 		delete(w.accounts, accounts[i])
 	}
-	if i < 5 {
-		return
+
+	const minAccountLength = 5
+	if i < minAccountLength {
+		return nil
 	}
-	return w.ScanForAccounts()
+
+	return w.ScanForAccounts(ctx)
 }
 
 // NewAccount creates a new account.
 func (w *Wallet) NewAccount(index *uint32) (a *Account, err error) {
 	index2 := w.nextIndex
+
 	if index != nil {
 		index2 = *index
 	}
+
 	a = &Account{w: w, index: index2}
 	if err = w.impl.deriveAccount(a); err != nil {
 		return
 	}
+
 	if a.address, err = util.PubkeyToAddress(a.pubkey); err != nil {
 		return
 	}
+
 	if index == nil {
 		w.nextIndex++
 	}
+
 	if _, ok := w.accounts[a.address]; !ok {
 		w.accounts[a.address] = a
 	} else if index == nil {
 		return w.NewAccount(nil)
 	}
+
 	return
 }
 
@@ -124,23 +154,27 @@ func (w *Wallet) GetAccounts() (accounts []*Account) {
 	for _, account := range w.accounts {
 		accounts = append(accounts, account)
 	}
+
 	return
 }
 
 // ReceivePendings pockets all pending amounts.
-func (w *Wallet) ReceivePendings() (err error) {
+func (w *Wallet) ReceivePendings(ctx context.Context) (err error) {
 	accounts := make([]string, 0, len(w.accounts))
 	for address := range w.accounts {
 		accounts = append(accounts, address)
 	}
-	pendings, err := w.RPC.AccountsPending(accounts, -1)
+
+	pendings, err := w.RPC.AccountsPending(ctx, accounts, -1)
 	if err != nil {
 		return
 	}
+
 	for account, pendings := range pendings {
-		if err = w.accounts[account].receivePendings(pendings); err != nil {
+		if err = w.accounts[account].receivePendings(ctx, pendings); err != nil {
 			return
 		}
 	}
+
 	return
 }

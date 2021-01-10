@@ -19,6 +19,7 @@ func TestNanoAmount(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, s, n.String())
 	}
+
 	for _, s := range []string{
 		"0.0000000000000000000000000000001",
 	} {

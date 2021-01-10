@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,16 +12,21 @@ var receiveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if walletAccount == "" {
 			checkWalletIndex()
+
 			wi := wallets[walletIndex]
+
 			wi.init()
+
 			for _, index := range wi.Accounts {
+				index := index
 				_, err := wi.w.NewAccount(&index)
 				fatalIf(err)
 			}
-			err := wi.w.ReceivePendings()
+
+			err := wi.w.ReceivePendings(context.TODO())
 			fatalIf(err)
 		} else {
-			err := getAccount().ReceivePendings()
+			err := getAccount().ReceivePendings(context.TODO())
 			fatalIf(err)
 		}
 	},

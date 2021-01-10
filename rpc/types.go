@@ -76,13 +76,17 @@ func (h BlockHash) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON sets *h to a copy of data.
-func (h *BlockHash) UnmarshalJSON(data []byte) (err error) {
+func (h *BlockHash) UnmarshalJSON(data []byte) error {
 	var s string
-	if err = json.Unmarshal(data, &s); err != nil {
-		return
+
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
 	}
+
+	var err error
 	*h, err = hex.DecodeString(s)
-	return
+
+	return err
 }
 
 // BlockInfo retrieves a json representation of a block.
@@ -108,10 +112,13 @@ func (h HexData) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON sets *h to a copy of data.
 func (h *HexData) UnmarshalJSON(data []byte) (err error) {
 	var s string
+
 	if err = json.Unmarshal(data, &s); err != nil {
 		return
 	}
+
 	*h, err = hex.DecodeString(s)
+
 	return
 }
 
@@ -126,11 +133,14 @@ func (r *RawAmount) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON sets *r to a copy of data.
 func (r *RawAmount) UnmarshalJSON(data []byte) (err error) {
 	var s string
+
 	if err = json.Unmarshal(data, &s); err != nil {
 		return
 	}
+
 	if _, ok := r.SetString(s, 10); !ok {
 		err = errors.New("unable to parse amount")
 	}
+
 	return
 }

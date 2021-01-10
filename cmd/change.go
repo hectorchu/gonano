@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -17,7 +18,7 @@ var changeCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		a := getAccount()
-		hash, err := a.ChangeRep(args[0])
+		hash, err := a.ChangeRep(context.TODO(), args[0])
 		fatalIf(err)
 		fmt.Println(strings.ToUpper(hex.EncodeToString(hash)))
 	},

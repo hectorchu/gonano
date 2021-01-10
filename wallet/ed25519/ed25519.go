@@ -10,6 +10,7 @@
 // representation includes a public key suffix to make multiple signing
 // operations with the same key more efficient. This package refers to the RFC
 // 8032 private key as the “seed”.
+//nolint:gomnd,wsl,nakedret,lll,errcheck,gosec,gocritic // Too many linter errors in cryptographic functions
 package ed25519
 
 // This code is a port of the public domain, “ref10” implementation of ed25519
@@ -165,8 +166,11 @@ func sign(signature, privateKey, message []byte) {
 
 	var digest1, messageDigest, hramDigest [64]byte
 	var expandedSecretKey [32]byte
+
 	h.Sum(digest1[:0])
+
 	copy(expandedSecretKey[:], digest1[:])
+
 	expandedSecretKey[0] &= 248
 	expandedSecretKey[31] &= 63
 	expandedSecretKey[31] |= 64
@@ -177,11 +181,15 @@ func sign(signature, privateKey, message []byte) {
 	h.Sum(messageDigest[:0])
 
 	var messageDigestReduced [32]byte
+
 	edwards25519.ScReduce(&messageDigestReduced, &messageDigest)
+
 	var R edwards25519.ExtendedGroupElement
+
 	edwards25519.GeScalarMultBase(&R, &messageDigestReduced)
 
 	var encodedR [32]byte
+
 	R.ToBytes(&encodedR)
 
 	h.Reset()
@@ -189,10 +197,13 @@ func sign(signature, privateKey, message []byte) {
 	h.Write(privateKey[32:])
 	h.Write(message)
 	h.Sum(hramDigest[:0])
+
 	var hramDigestReduced [32]byte
+
 	edwards25519.ScReduce(&hramDigestReduced, &hramDigest)
 
 	var s [32]byte
+
 	edwards25519.ScMulAdd(&s, &hramDigestReduced, &expandedSecretKey, &messageDigestReduced)
 
 	copy(signature[:], encodedR[:])
@@ -212,25 +223,33 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 
 	var A edwards25519.ExtendedGroupElement
 	var publicKeyBytes [32]byte
+
 	copy(publicKeyBytes[:], publicKey)
+
 	if !A.FromBytes(&publicKeyBytes) {
 		return false
 	}
+
 	edwards25519.FeNeg(&A.X, &A.X)
 	edwards25519.FeNeg(&A.T, &A.T)
 
 	h, _ := blake2b.New512(nil)
+
 	h.Write(sig[:32])
 	h.Write(publicKey[:])
 	h.Write(message)
+
 	var digest [64]byte
+
 	h.Sum(digest[:0])
 
 	var hReduced [32]byte
+
 	edwards25519.ScReduce(&hReduced, &digest)
 
 	var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
+
 	copy(s[:], sig[32:])
 
 	// https://tools.ietf.org/html/rfc8032#section-5.1.7 requires that s be in
@@ -242,6 +261,8 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 	edwards25519.GeDoubleScalarMultVartime(&R, &hReduced, &A, &s)
 
 	var checkR [32]byte
+
 	R.ToBytes(&checkR)
+
 	return bytes.Equal(sig[:32], checkR[:])
 }

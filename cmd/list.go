@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"sort"
@@ -27,21 +28,29 @@ var listCmd = &cobra.Command{
 			}
 		} else {
 			checkWalletIndex()
+
 			var accounts []string
 			for address := range wallets[walletIndex].Accounts {
 				accounts = append(accounts, address)
 			}
+
 			sort.Strings(accounts)
 			rpcClient := rpc.Client{URL: rpcURL}
+
 			var balanceSum, pendingSum big.Int
+
 			for _, address := range accounts {
-				balance, pending, err := rpcClient.AccountBalance(address)
+				balance, pending, err := rpcClient.AccountBalance(context.Background(), address)
 				fatalIf(err)
+
 				balanceSum.Add(&balanceSum, &balance.Int)
 				pendingSum.Add(&pendingSum, &pending.Int)
+
 				fmt.Print(address)
+
 				printAmounts(&balance.Int, &pending.Int)
 			}
+
 			if len(accounts) > 1 {
 				fmt.Print(strings.Repeat(" ", 61), "Sum:")
 				printAmounts(&balanceSum, &pendingSum)
@@ -54,9 +63,11 @@ func printAmounts(balance, pending *big.Int) {
 	if balance.Cmp(&big.Int{}) > 0 {
 		fmt.Printf(" %s", util.NanoAmount{Raw: balance})
 	}
+
 	if pending.Cmp(&big.Int{}) > 0 {
 		fmt.Printf(" (+ %s pending)", util.NanoAmount{Raw: pending})
 	}
+
 	fmt.Println()
 }
 

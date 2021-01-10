@@ -1,3 +1,4 @@
+// Package cmd provides the cli commands from cobra
 package cmd
 
 import (
@@ -44,7 +45,9 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&walletIndex, "wallet", "w", -1, "Index of the wallet to use")
 	rootCmd.PersistentFlags().StringVarP(&walletAccount, "account", "a", "", "Account to operate on")
 	rootCmd.PersistentFlags().StringVarP(&rpcURL, "rpc", "r", "https://mynano.ninja/api/node", "RPC endpoint URL")
-	rootCmd.PersistentFlags().StringVarP(&rpcWorkURL, "rpc-work", "s", "http://[::1]:7076", "RPC endpoint URL for work generation")
+	rootCmd.PersistentFlags().StringVarP(
+		&rpcWorkURL, "rpc-work", "s", "http://[::1]:7076", "RPC endpoint URL for work generation",
+	)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -61,6 +64,7 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".gonano")
 	}
+
 	viper.SetConfigType("yaml")
 
 	viper.AutomaticEnv() // read in environment variables that match

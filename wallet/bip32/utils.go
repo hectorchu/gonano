@@ -1,3 +1,5 @@
+// Package bip32 provides Bip32 functionality
+// nolint:gomnd // Magic numbers are frequent
 package bip32
 
 import (
@@ -10,6 +12,9 @@ import (
 
 	"github.com/FactomProject/basen"
 	btcutil "github.com/FactomProject/btcutilecc"
+	"github.com/hectorchu/gonano/constants"
+
+	// nolint: staticcheck // Required hash
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -27,10 +32,11 @@ var (
 
 func hashSha256(data []byte) ([]byte, error) {
 	hasher := sha256.New()
-	_, err := hasher.Write(data)
-	if err != nil {
+
+	if _, err := hasher.Write(data); err != nil {
 		return nil, err
 	}
+
 	return hasher.Sum(nil), nil
 }
 
@@ -44,15 +50,18 @@ func hashDoubleSha256(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return hash2, nil
 }
 
 func hashRipeMD160(data []byte) ([]byte, error) {
 	hasher := ripemd160.New()
+
 	_, err := io.WriteString(hasher, string(data))
 	if err != nil {
 		return nil, err
 	}
+
 	return hasher.Sum(nil), nil
 }
 
@@ -88,6 +97,7 @@ func addChecksumToBytes(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return append(data, checksum...), nil
 }
 
@@ -104,15 +114,20 @@ func publicKeyForPrivateKey(key []byte) []byte {
 	return compressPublicKey(curve.ScalarBaseMult(key))
 }
 
+// nolint:unused,deadcode // TODO - Keep until confirmed to be removed
 func addPublicKeys(key1 []byte, key2 []byte) []byte {
 	x1, y1 := expandPublicKey(key1)
 	x2, y2 := expandPublicKey(key2)
+
 	return compressPublicKey(curve.Add(x1, y1, x2, y2))
 }
 
+// nolint:unused,deadcode // TODO - Keep until confirmed to be removed
 func addPrivateKeys(key1 []byte, key2 []byte) []byte {
 	var key1Int big.Int
+
 	var key2Int big.Int
+
 	key1Int.SetBytes(key1)
 	key2Int.SetBytes(key2)
 
@@ -124,6 +139,7 @@ func addPrivateKeys(key1 []byte, key2 []byte) []byte {
 		extra := make([]byte, 32-len(b))
 		b = append(extra, b...)
 	}
+
 	return b
 }
 
@@ -170,9 +186,9 @@ func expandPublicKey(key []byte) (*big.Int, *big.Int) {
 }
 
 func validatePrivateKey(key []byte) error {
-	if fmt.Sprintf("%x", key) == "0000000000000000000000000000000000000000000000000000000000000000" || //if the key is zero
-		bytes.Compare(key, curveParams.N.Bytes()) >= 0 || //or is outside of the curve
-		len(key) != 32 { //or is too short
+	if fmt.Sprintf("%x", key) == constants.ZeroKey || // if the key is zero
+		bytes.Compare(key, curveParams.N.Bytes()) >= 0 || // or is outside of the curve
+		len(key) != constants.KeyLength { // or is too short
 		return ErrInvalidPrivateKey
 	}
 
@@ -195,5 +211,6 @@ func validateChildPublicKey(key []byte) error {
 func uint32Bytes(i uint32) []byte {
 	bytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(bytes, i)
+
 	return bytes
 }

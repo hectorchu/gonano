@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package edwards25519 provides edwards25519 signing for Nano
+//nolint:gomnd,wsl,nakedret,lll,ineffassign,golint,stylecheck,gocritic,funlen,gocognit,dupl,gocyclo // Too many linter errors in cryptographic functions
 package edwards25519
 
 import "encoding/binary"

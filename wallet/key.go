@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"github.com/hectorchu/gonano/constants"
 	"github.com/hectorchu/gonano/wallet/bip32"
 	"github.com/hectorchu/gonano/wallet/ed25519"
 	"github.com/tyler-smith/go-bip39"
@@ -12,18 +13,22 @@ import (
 )
 
 func deriveKey(seed []byte, index uint32) (key []byte, err error) {
-	if len(seed) != 32 {
+	if len(seed) != constants.SeedLength {
 		err = errors.New("seed must be 32 bytes")
 		return
 	}
+
 	hash, err := blake2b.New256(nil)
 	if err != nil {
 		return
 	}
-	hash.Write(seed)
+
+	_, _ = hash.Write(seed)
+
 	if err = binary.Write(hash, binary.BigEndian, index); err != nil {
 		return
 	}
+
 	return hash.Sum(nil), nil
 }
 
@@ -40,10 +45,14 @@ func deriveBip39Key(seed []byte, index uint32) (key []byte, err error) {
 	if err != nil {
 		return
 	}
+
+	const maxInt = 0x80000000
+
 	for _, i := range []uint32{44, 165, index} {
-		if key2, err = key2.NewChildKey(0x80000000 | i); err != nil {
+		if key2, err = key2.NewChildKey(maxInt | i); err != nil {
 			return
 		}
 	}
+
 	return key2.Key, nil
 }

@@ -1,6 +1,7 @@
 package rpc_test
 
 import (
+	"context"
 	"encoding/hex"
 	"testing"
 
@@ -14,21 +15,24 @@ func hexString(s string) []byte {
 	return b
 }
 
+// nolint:deadcode,unused // Keep until confirmed to be removed
 func strToRaw(s string) *rpc.RawAmount {
 	var r rpc.RawAmount
+
 	r.SetString(s, 10)
+
 	return &r
 }
 
 func TestBlockAccount(t *testing.T) {
 	hash := hexString("8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD")
-	account, err := getClient().BlockAccount(hash)
+	account, err := getClient().BlockAccount(context.Background(), hash)
 	require.Nil(t, err)
 	assert.Equal(t, testAccount, account)
 }
 
 func TestBlockCount(t *testing.T) {
-	cemented, count, unchecked, err := getClient().BlockCount()
+	cemented, count, unchecked, err := getClient().BlockCount(context.Background())
 	require.Nil(t, err)
 	assert.Greater(t, cemented, uint64(50000000))
 	assert.Greater(t, count, uint64(50000000))
@@ -36,7 +40,7 @@ func TestBlockCount(t *testing.T) {
 }
 
 func TestBlockCountType(t *testing.T) {
-	send, receive, open, change, state, err := getClient().BlockCountType()
+	send, receive, open, change, state, err := getClient().BlockCountType(context.Background())
 	require.Nil(t, err)
 	assert.Greater(t, send, uint64(5000000))
 	assert.Greater(t, receive, uint64(4000000))
@@ -61,19 +65,19 @@ func testBlockInfo(t *testing.T, info *rpc.BlockInfo) {
 	assertEqualBig(t, "134000000000000000000000000", &info.Contents.Balance.Int)
 	assertEqualBytes(t, "CEC5287A00F5A50E11A80EC3A63C575D37BFD5BAD87BCB1B7E46DBCBE2F1EC3E", info.Contents.Link)
 	assert.Equal(t, "nano_3mp773x13xf73rati5p5nry7gqbqqzcuop5usefqwjpushjh5u3yat7bzkoj", info.Contents.LinkAsAccount)
-	assertEqualBytes(t, "E0F2C0187F87917C28BB989DA516114F64FEEAD307011F73F1A0982B3603A51740279ED5DA4D428C3F0E652A638BB75F790B695F9D23125B54DB3312A7F28100", info.Contents.Signature)
+	assertEqualBytes(t, signature, info.Contents.Signature)
 	assertEqualBytes(t, "788f7ec074f1854b", info.Contents.Work)
 	assert.Equal(t, "receive", info.Subtype)
 }
 
 func TestBlockInfo(t *testing.T) {
-	info, err := getClient().BlockInfo(hexString(testBlockInfoHash))
+	info, err := getClient().BlockInfo(context.Background(), hexString(testBlockInfoHash))
 	require.Nil(t, err)
 	testBlockInfo(t, &info)
 }
 
 func TestBlocksInfo(t *testing.T) {
-	blocks, err := getClient().BlocksInfo([]rpc.BlockHash{hexString(testBlockInfoHash)})
+	blocks, err := getClient().BlocksInfo(context.Background(), []rpc.BlockHash{hexString(testBlockInfoHash)})
 	require.Nil(t, err)
 	assert.Len(t, blocks, 1)
 	testBlockInfo(t, blocks[testBlockInfoHash])
@@ -81,7 +85,7 @@ func TestBlocksInfo(t *testing.T) {
 
 func TestChain(t *testing.T) {
 	block := hexString("8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD")
-	blocks, err := getClient().Chain(block, -1)
+	blocks, err := getClient().Chain(context.Background(), block, -1)
 	require.Nil(t, err)
 	assert.Len(t, blocks, 3)
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", blocks[0])
@@ -91,7 +95,7 @@ func TestChain(t *testing.T) {
 
 func TestSuccessors(t *testing.T) {
 	block := hexString("E6F513D4821F60151DD3C08C078AF3403F59AE44CC7983083E2391A3E1972A8F")
-	blocks, err := getClient().Successors(block, -1)
+	blocks, err := getClient().Successors(context.Background(), block, -1)
 	require.Nil(t, err)
 	assert.Len(t, blocks, 3)
 	assertEqualBytes(t, "E6F513D4821F60151DD3C08C078AF3403F59AE44CC7983083E2391A3E1972A8F", blocks[0])

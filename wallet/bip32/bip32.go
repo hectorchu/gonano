@@ -1,3 +1,5 @@
+// Package bip32 provides Bip32 functionality
+// nolint:gomnd // Magic numbers are frequent
 package bip32
 
 import (
@@ -27,21 +29,21 @@ var (
 
 	// ErrSerializedKeyWrongSize is returned when trying to deserialize a key that
 	// has an incorrect length
-	ErrSerializedKeyWrongSize = errors.New("Serialized keys should by exactly 82 bytes")
+	ErrSerializedKeyWrongSize = errors.New("serialized keys should by exactly 82 bytes")
 
 	// ErrHardnedChildPublicKey is returned when trying to create a harded child
 	// of the public key
-	ErrHardnedChildPublicKey = errors.New("Can't create hardened child for public key")
+	ErrHardnedChildPublicKey = errors.New("can't create hardened child for public key")
 
 	// ErrInvalidChecksum is returned when deserializing a key with an incorrect
 	// checksum
-	ErrInvalidChecksum = errors.New("Checksum doesn't match")
+	ErrInvalidChecksum = errors.New("checksum doesn't match")
 
 	// ErrInvalidPrivateKey is returned when a derived private key is invalid
-	ErrInvalidPrivateKey = errors.New("Invalid private key")
+	ErrInvalidPrivateKey = errors.New("invalid private key")
 
 	// ErrInvalidPublicKey is returned when a derived public key is invalid
-	ErrInvalidPublicKey = errors.New("Invalid public key")
+	ErrInvalidPublicKey = errors.New("invalid public key")
 )
 
 // Key represents a bip32 extended key
@@ -59,10 +61,12 @@ type Key struct {
 func NewMasterKey(seed []byte) (*Key, error) {
 	// Generate key and chaincode
 	hmac := hmac.New(sha512.New, []byte("ed25519 seed"))
+
 	_, err := hmac.Write(seed)
 	if err != nil {
 		return nil, err
 	}
+
 	intermediary := hmac.Sum(nil)
 
 	// Split it into our key and chain code
@@ -90,6 +94,7 @@ func NewMasterKey(seed []byte) (*Key, error) {
 }
 
 // NewChildKey derives a child key from a given parent as outlined by bip32
+// nolint:gocognit // TODO - refactor to reduce complexity
 func (key *Key) NewChildKey(childIdx uint32) (*Key, error) {
 	// Fail early if trying to create hardned child from public key
 	if !key.IsPrivate && childIdx >= FirstHardenedChild {
@@ -112,10 +117,12 @@ func (key *Key) NewChildKey(childIdx uint32) (*Key, error) {
 	// Bip32 CKDpriv
 	if key.IsPrivate {
 		childKey.Version = PrivateWalletVersion
+
 		fingerprint, err := hash160(publicKeyForPrivateKey(key.Key))
 		if err != nil {
 			return nil, err
 		}
+
 		childKey.FingerPrint = fingerprint[:4]
 		childKey.Key = intermediary[:32]
 
@@ -124,13 +131,12 @@ func (key *Key) NewChildKey(childIdx uint32) (*Key, error) {
 		if err != nil {
 			return nil, err
 		}
-		// Bip32 CKDpub
 	} else {
+		// Bip32 CKDpub
 		keyBytes := publicKeyForPrivateKey(intermediary[:32])
 
 		// Validate key
-		err := validateChildPublicKey(keyBytes)
-		if err != nil {
+		if err := validateChildPublicKey(keyBytes); err != nil {
 			return nil, err
 		}
 
@@ -153,6 +159,7 @@ func (key *Key) getIntermediary(childIdx uint32) ([]byte, error) {
 	childIndexBytes := uint32Bytes(childIdx)
 
 	var data []byte
+
 	if childIdx >= FirstHardenedChild {
 		data = append([]byte{0x0}, key.Key...)
 	} else {
@@ -162,13 +169,15 @@ func (key *Key) getIntermediary(childIdx uint32) ([]byte, error) {
 			data = key.Key
 		}
 	}
+
 	data = append(data, childIndexBytes...)
 
 	hmac := hmac.New(sha512.New, key.ChainCode)
-	_, err := hmac.Write(data)
-	if err != nil {
+
+	if _, err := hmac.Write(data); err != nil {
 		return nil, err
 	}
+
 	return hmac.Sum(nil), nil
 }
 
@@ -238,7 +247,9 @@ func Deserialize(data []byte) (*Key, error) {
 	if len(data) != 82 {
 		return nil, ErrSerializedKeyWrongSize
 	}
+
 	var key = &Key{}
+
 	key.Version = data[0:4]
 	key.Depth = data[4]
 	key.FingerPrint = data[5:9]
@@ -260,11 +271,13 @@ func Deserialize(data []byte) (*Key, error) {
 	}
 
 	cs2 := data[len(data)-4:]
+
 	for i := range cs1 {
 		if cs1[i] != cs2[i] {
 			return nil, ErrInvalidChecksum
 		}
 	}
+
 	return key, nil
 }
 
@@ -274,6 +287,7 @@ func B58Deserialize(data string) (*Key, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return Deserialize(b)
 }
 
@@ -282,5 +296,6 @@ func NewSeed() ([]byte, error) {
 	// Well that easy, just make go read 256 random bytes into a slice
 	s := make([]byte, 256)
 	_, err := rand.Read(s)
+
 	return s, err
 }

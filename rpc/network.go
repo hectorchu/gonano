@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 )
@@ -13,17 +14,18 @@ import (
 // from the base difficulty of network_minimum is also provided for comparison.
 // network_receive_minimum and network_receive_current are also provided as lower
 // thresholds exclusively for receive blocks.
-func (c *Client) ActiveDifficulty() (
+func (c *Client) ActiveDifficulty(ctx context.Context) (
 	multiplier float64,
 	networkCurrent, networkMinimum,
 	networkReceiveCurrent, networkReceiveMinimum HexData,
 	difficultyTrend []float64,
 	err error,
 ) {
-	resp, err := c.send(map[string]interface{}{"action": "active_difficulty", "include_trend": true})
+	resp, err := c.send(ctx, map[string]interface{}{"action": "active_difficulty", "include_trend": true})
 	if err != nil {
 		return
 	}
+
 	var v struct {
 		Multiplier            float64  `json:"multiplier,string"`
 		NetworkCurrent        HexData  `json:"network_current"`
@@ -32,15 +34,19 @@ func (c *Client) ActiveDifficulty() (
 		NetworkReceiveMinimum HexData  `json:"network_receive_minimum"`
 		DifficultyTrend       []string `json:"difficulty_trend"`
 	}
+
 	if err = json.Unmarshal(resp, &v); err != nil {
 		return
 	}
+
 	difficultyTrend = make([]float64, len(v.DifficultyTrend))
+
 	for i, s := range v.DifficultyTrend {
 		if difficultyTrend[i], err = strconv.ParseFloat(s, 64); err != nil {
 			return
 		}
 	}
+
 	return v.Multiplier,
 		v.NetworkCurrent, v.NetworkMinimum,
 		v.NetworkReceiveCurrent, v.NetworkReceiveMinimum,
@@ -48,12 +54,14 @@ func (c *Client) ActiveDifficulty() (
 }
 
 // AvailableSupply returns how many raw are in the public supply.
-func (c *Client) AvailableSupply() (available *RawAmount, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "available_supply"})
+func (c *Client) AvailableSupply(ctx context.Context) (available *RawAmount, err error) {
+	resp, err := c.send(ctx, map[string]interface{}{"action": "available_supply"})
 	if err != nil {
 		return
 	}
+
 	var v struct{ Available *RawAmount }
 	err = json.Unmarshal(resp, &v)
+
 	return v.Available, err
 }
