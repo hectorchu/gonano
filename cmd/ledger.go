@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/hectorchu/gonano/wallet"
@@ -16,7 +15,7 @@ var ledgerCmd = &cobra.Command{
 		fatalIf(err)
 		wi := &walletInfo{w: w, IsLedger: true}
 		wallets = append(wallets, wi)
-		wi.initAccounts(context.TODO())
+		wi.initAccounts(cmd.Context())
 		fmt.Println("Added wallet.")
 	},
 }

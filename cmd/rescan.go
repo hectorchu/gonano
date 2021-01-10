@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -15,7 +14,7 @@ var rescanCmd = &cobra.Command{
 		wi := wallets[walletIndex]
 		n := len(wi.Accounts)
 		wi.init()
-		wi.initAccounts(context.TODO())
+		wi.initAccounts(cmd.Context())
 		n = len(wi.Accounts) - n
 		switch n {
 		case 1:

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"sort"
@@ -40,7 +39,7 @@ var listCmd = &cobra.Command{
 			var balanceSum, pendingSum big.Int
 
 			for _, address := range accounts {
-				balance, pending, err := rpcClient.AccountBalance(context.Background(), address)
+				balance, pending, err := rpcClient.AccountBalance(cmd.Context(), address)
 				fatalIf(err)
 
 				balanceSum.Add(&balanceSum, &balance.Int)

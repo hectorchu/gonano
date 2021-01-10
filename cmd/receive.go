@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 )
 
@@ -23,10 +21,10 @@ var receiveCmd = &cobra.Command{
 				fatalIf(err)
 			}
 
-			err := wi.w.ReceivePendings(context.TODO())
+			err := wi.w.ReceivePendings(cmd.Context())
 			fatalIf(err)
 		} else {
-			err := getAccount().ReceivePendings(context.TODO())
+			err := getAccount().ReceivePendings(cmd.Context())
 			fatalIf(err)
 		}
 	},

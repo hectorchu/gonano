@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/hectorchu/gonano/wallet"
@@ -13,7 +12,7 @@ var addCmd = &cobra.Command{
 	Short: "Add a new wallet or account",
 	Run: func(cmd *cobra.Command, args []string) {
 		if walletIndex < 0 {
-			initNewWallet(context.TODO())
+			initNewWallet(cmd.Context())
 			fmt.Println("Added wallet.")
 		} else {
 			checkWalletIndex()

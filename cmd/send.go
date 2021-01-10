@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -23,7 +22,7 @@ var sendCmd = &cobra.Command{
 		a := getAccount()
 		amount, err := util.NanoAmountFromString(args[1])
 		fatalIf(err)
-		hash, err := a.Send(context.TODO(), args[0], amount.Raw)
+		hash, err := a.Send(cmd.Context(), args[0], amount.Raw)
 		fatalIf(err)
 		fmt.Println(strings.ToUpper(hex.EncodeToString(hash)))
 	},
