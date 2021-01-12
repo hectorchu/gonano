@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,12 +12,22 @@ import (
 // Client is used for connecting to http rpc endpoints.
 type Client struct {
 	URL string
+	Ctx context.Context
 }
 
 func (c *Client) send(body interface{}) (result []byte, err error) {
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(body)
-	resp, err := http.Post(c.URL, "application/json", &buf)
+	ctx := c.Ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	req, err := http.NewRequestWithContext(ctx, "POST", c.URL, &buf)
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
 	}
