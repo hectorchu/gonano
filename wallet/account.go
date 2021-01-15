@@ -39,6 +39,18 @@ func (a *Account) Balance() (balance, pending *big.Int, err error) {
 
 // Send sends an amount to an account.
 func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err error) {
+	block, err := a.SendBlock(account, amount)
+	if err != nil {
+		return
+	}
+	if block.Work, err = a.w.workGenerate(block.Previous); err != nil {
+		return
+	}
+	return a.w.RPC.Process(block, "send")
+}
+
+// SendBlock generates a signed send block.
+func (a *Account) SendBlock(account string, amount *big.Int) (block *rpc.Block, err error) {
 	link, err := util.AddressToPubkey(account)
 	if err != nil {
 		return
@@ -54,7 +66,7 @@ func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err
 	if info.Balance.Cmp(&big.Int{}) < 0 {
 		return nil, errors.New("insufficient funds")
 	}
-	block := &rpc.Block{
+	block = &rpc.Block{
 		Type:           "state",
 		Account:        a.address,
 		Previous:       info.Frontier,
@@ -62,13 +74,7 @@ func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err
 		Balance:        info.Balance,
 		Link:           link,
 	}
-	if err = a.w.impl.signBlock(a, block); err != nil {
-		return
-	}
-	if block.Work, err = a.w.workGenerate(info.Frontier); err != nil {
-		return
-	}
-	return a.w.RPC.Process(block, "send")
+	return block, a.w.impl.signBlock(a, block)
 }
 
 // ReceivePendings pockets all pending amounts.
