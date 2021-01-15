@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"encoding/hex"
 	"fmt"
-	"strings"
 
 	"github.com/hectorchu/gonano/util"
 	"github.com/spf13/cobra"
@@ -22,7 +20,7 @@ var sendCmd = &cobra.Command{
 		fatalIf(err)
 		hash, err := a.Send(args[0], amount.Raw)
 		fatalIf(err)
-		fmt.Println(strings.ToUpper(hex.EncodeToString(hash)))
+		fmt.Println(hash)
 	},
 }
 

@@ -6,6 +6,9 @@ import (
 	"errors"
 	"math/big"
 	"strings"
+
+	"github.com/hectorchu/gonano/util"
+	"golang.org/x/crypto/blake2b"
 )
 
 // AccountHistory reports send/receive information within a block.
@@ -67,12 +70,40 @@ type Block struct {
 	Work           HexData    `json:"work"`
 }
 
+// Hash calculates the block hash.
+func (b *Block) Hash() (hash BlockHash, err error) {
+	h, err := blake2b.New256(nil)
+	if err != nil {
+		return
+	}
+	h.Write(make([]byte, 31))
+	h.Write([]byte{6})
+	pubkey, err := util.AddressToPubkey(b.Account)
+	if err != nil {
+		return
+	}
+	h.Write(pubkey)
+	h.Write(b.Previous)
+	pubkey, err = util.AddressToPubkey(b.Representative)
+	if err != nil {
+		return
+	}
+	h.Write(pubkey)
+	h.Write(b.Balance.FillBytes(make([]byte, 16)))
+	h.Write(b.Link)
+	return h.Sum(nil), nil
+}
+
 // BlockHash represents a block hash.
 type BlockHash []byte
 
+func (h BlockHash) String() string {
+	return strings.ToUpper(hex.EncodeToString(h))
+}
+
 // MarshalJSON returns the JSON encoding of h.
 func (h BlockHash) MarshalJSON() ([]byte, error) {
-	return json.Marshal(strings.ToUpper(hex.EncodeToString(h)))
+	return json.Marshal(h.String())
 }
 
 // UnmarshalJSON sets *h to a copy of data.

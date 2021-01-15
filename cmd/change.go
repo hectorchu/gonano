@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"encoding/hex"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +17,7 @@ var changeCmd = &cobra.Command{
 		a := getAccount()
 		hash, err := a.ChangeRep(args[0])
 		fatalIf(err)
-		fmt.Println(strings.ToUpper(hex.EncodeToString(hash)))
+		fmt.Println(hash)
 	},
 }
 

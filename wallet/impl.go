@@ -5,9 +5,7 @@ import (
 
 	"github.com/hectorchu/gonano/ledger"
 	"github.com/hectorchu/gonano/rpc"
-	"github.com/hectorchu/gonano/util"
 	"github.com/hectorchu/gonano/wallet/ed25519"
-	"golang.org/x/crypto/blake2b"
 )
 
 type seedImpl struct{}
@@ -27,22 +25,11 @@ func (seedImpl) deriveAccount(a *Account) (err error) {
 }
 
 func (seedImpl) signBlock(a *Account, block *rpc.Block) (err error) {
-	hash, err := blake2b.New256(nil)
+	hash, err := block.Hash()
 	if err != nil {
 		return
 	}
-	hash.Write(make([]byte, 31))
-	hash.Write([]byte{6})
-	hash.Write(a.pubkey)
-	hash.Write(block.Previous)
-	pubkey, err := util.AddressToPubkey(block.Representative)
-	if err != nil {
-		return
-	}
-	hash.Write(pubkey)
-	hash.Write(block.Balance.FillBytes(make([]byte, 16)))
-	hash.Write(block.Link)
-	block.Signature = ed25519.Sign(a.key, hash.Sum(nil))
+	block.Signature = ed25519.Sign(a.key, hash)
 	return
 }
 
