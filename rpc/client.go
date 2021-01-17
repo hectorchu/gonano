@@ -17,12 +17,13 @@ type Client struct {
 
 func (c *Client) send(body interface{}) (result []byte, err error) {
 	var buf bytes.Buffer
-	json.NewEncoder(&buf).Encode(body)
-	ctx := c.Ctx
-	if ctx == nil {
-		ctx = context.Background()
+	if err = json.NewEncoder(&buf).Encode(body); err != nil {
+		return
 	}
-	req, err := http.NewRequestWithContext(ctx, "POST", c.URL, &buf)
+	if c.Ctx == nil {
+		c.Ctx = context.Background()
+	}
+	req, err := http.NewRequestWithContext(c.Ctx, http.MethodPost, c.URL, &buf)
 	if err != nil {
 		return
 	}
@@ -32,8 +33,12 @@ func (c *Client) send(body interface{}) (result []byte, err error) {
 		return
 	}
 	buf.Reset()
-	io.Copy(&buf, resp.Body)
-	resp.Body.Close()
+	if _, err = io.Copy(&buf, resp.Body); err != nil {
+		return
+	}
+	if err = resp.Body.Close(); err != nil {
+		return
+	}
 	var v struct{ Error, Message string }
 	if err = json.Unmarshal(buf.Bytes(), &v); err != nil {
 		return
