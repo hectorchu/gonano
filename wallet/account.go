@@ -62,8 +62,7 @@ func (a *Account) SendBlock(account string, amount *big.Int) (block *rpc.Block, 
 	if a.representative == "" {
 		a.representative = info.Representative
 	}
-	info.Balance.Sub(&info.Balance.Int, amount)
-	if info.Balance.Cmp(&big.Int{}) < 0 {
+	if info.Balance.Sub(&info.Balance.Int, amount).Sign() < 0 {
 		return nil, errors.New("insufficient funds")
 	}
 	block = &rpc.Block{

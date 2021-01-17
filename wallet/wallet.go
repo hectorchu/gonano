@@ -1,8 +1,6 @@
 package wallet
 
 import (
-	"math/big"
-
 	"github.com/hectorchu/gonano/rpc"
 	"github.com/hectorchu/gonano/util"
 )
@@ -74,7 +72,7 @@ func (w *Wallet) ScanForAccounts() (err error) {
 	}
 	i := len(accounts) - 1
 	for ; i >= 0; i-- {
-		if balances[accounts[i]].Pending.Cmp(&big.Int{}) > 0 {
+		if balances[accounts[i]].Pending.Sign() > 0 {
 			break
 		}
 		if frontiers[accounts[i]] != nil {

@@ -134,7 +134,7 @@ func TestRepresentatives(t *testing.T) {
 	require.Nil(t, err)
 	require.Len(t, representatives, 3)
 	for _, weight := range representatives {
-		assert.GreaterOrEqual(t, weight.Cmp(&big.Int{}), 0)
+		assert.GreaterOrEqual(t, weight.Sign(), 0)
 	}
 }
 
@@ -143,6 +143,6 @@ func TestRepresentativesOnline(t *testing.T) {
 	require.Nil(t, err)
 	require.NotEmpty(t, representatives)
 	for _, r := range representatives {
-		assert.Greater(t, r.Weight.Cmp(&big.Int{}), 0)
+		assert.Greater(t, r.Weight.Sign(), 0)
 	}
 }
