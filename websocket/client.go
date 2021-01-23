@@ -27,6 +27,7 @@ func (c *Client) Connect() (err error) {
 		"action": "subscribe",
 		"topic":  "confirmation",
 	}); err != nil {
+		c.c.Close()
 		return
 	}
 	c.Messages = make(chan interface{})
@@ -48,7 +49,11 @@ func (c *Client) loop() {
 		var m message
 		if err := c.c.ReadJSON(&m); err != nil {
 			c.c.Close()
-			<-c.quit
+			select {
+			case c.Messages <- err:
+				<-c.quit
+			case <-c.quit:
+			}
 			return
 		}
 		select {
