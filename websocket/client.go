@@ -40,6 +40,7 @@ func (c *Client) Connect() (err error) {
 func (c *Client) Close() (err error) {
 	err = c.c.Close()
 	c.quit <- true
+	<-c.Messages
 	return
 }
 
