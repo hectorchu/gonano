@@ -30,7 +30,7 @@ func (c *Client) send(body interface{}) (result []byte, err error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if c.AuthHeader != "" {
-		req.Header.Set("Authorization", AuthHeader)
+		req.Header.Set("Authorization", c.AuthHeader)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
