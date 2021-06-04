@@ -41,19 +41,6 @@ func (c *Client) BlockCount() (cemented, count, unchecked uint64, err error) {
 	return v.Cemented, v.Count, v.Unchecked, err
 }
 
-// BlockCountType reports the number of blocks in the ledger by type.
-func (c *Client) BlockCountType() (send, receive, open, change, state uint64, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "block_count_type"})
-	if err != nil {
-		return
-	}
-	var v struct {
-		Send, Receive, Open, Change, State uint64 `json:",string"`
-	}
-	err = json.Unmarshal(resp, &v)
-	return v.Send, v.Receive, v.Open, v.Change, v.State, err
-}
-
 // BlockInfo retrieves a json representation of a block.
 func (c *Client) BlockInfo(hash BlockHash) (info BlockInfo, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "block_info", "json_block": true, "hash": hash})

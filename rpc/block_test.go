@@ -14,12 +14,6 @@ func hexString(s string) []byte {
 	return b
 }
 
-func strToRaw(s string) *rpc.RawAmount {
-	var r rpc.RawAmount
-	r.SetString(s, 10)
-	return &r
-}
-
 func TestBlockAccount(t *testing.T) {
 	hash := hexString("8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD")
 	account, err := getClient().BlockAccount(hash)
@@ -33,16 +27,6 @@ func TestBlockCount(t *testing.T) {
 	assert.Greater(t, cemented, uint64(50000000))
 	assert.Greater(t, count, uint64(50000000))
 	assert.Less(t, unchecked, uint64(500000))
-}
-
-func TestBlockCountType(t *testing.T) {
-	send, receive, open, change, state, err := getClient().BlockCountType()
-	require.Nil(t, err)
-	assert.Greater(t, send, uint64(5000000))
-	assert.Greater(t, receive, uint64(4000000))
-	assert.Greater(t, open, uint64(500000))
-	assert.Greater(t, change, uint64(20000))
-	assert.Greater(t, state, uint64(40000000))
 }
 
 const testBlockInfoHash = "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD"
