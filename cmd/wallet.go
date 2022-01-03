@@ -20,6 +20,7 @@ type walletInfo struct {
 var wallets []*walletInfo
 var walletIndex int
 var walletAccount string
+var walletAccountIndex uint32
 
 func initWallets() {
 	v := viper.GetStringMap("wallets")
