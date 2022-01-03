@@ -15,7 +15,11 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List wallets or accounts within a wallet",
 	Run: func(cmd *cobra.Command, args []string) {
-		if walletIndex < 0 {
+		if walletAccount != "" {
+			// For when a specific account is specified. A single account is returned.
+			getBalanceAndPrint(walletAccount)
+		} else if walletIndex < 0 {
+			// For when nothing is specified, shows the number of accounts in each wallet.
 			for i, wi := range wallets {
 				n := len(wi.Accounts)
 				switch n {
@@ -26,21 +30,19 @@ var listCmd = &cobra.Command{
 				}
 			}
 		} else {
+			// For when a specific wallet is specified, shows the balance of all accounts
+			// in that wallet.
 			checkWalletIndex()
 			var accounts []string
 			for address := range wallets[walletIndex].Accounts {
 				accounts = append(accounts, address)
 			}
 			sort.Strings(accounts)
-			rpcClient := rpc.Client{URL: rpcURL}
 			var balanceSum, pendingSum big.Int
 			for _, address := range accounts {
-				balance, pending, err := rpcClient.AccountBalance(address)
-				fatalIf(err)
+				balance, pending := getBalanceAndPrint(address)
 				balanceSum.Add(&balanceSum, &balance.Int)
 				pendingSum.Add(&pendingSum, &pending.Int)
-				fmt.Print(address)
-				printAmounts(&balance.Int, &pending.Int)
 			}
 			if len(accounts) > 1 {
 				fmt.Print(strings.Repeat(" ", 61), "Sum:")
@@ -48,6 +50,15 @@ var listCmd = &cobra.Command{
 			}
 		}
 	},
+}
+
+func getBalanceAndPrint(account string) (balance, pending *rpc.RawAmount) {
+	rpcClient := rpc.Client{URL: rpcURL}
+	balance, pending, err := rpcClient.AccountBalance(account)
+	fatalIf(err)
+	fmt.Print(account)
+	printAmounts(&balance.Int, &pending.Int)
+	return balance, pending
 }
 
 func printAmounts(balance, pending *big.Int) {
