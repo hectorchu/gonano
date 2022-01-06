@@ -45,7 +45,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&walletAccount, "account", "a", "", "Account to operate on")
 	rootCmd.PersistentFlags().StringVarP(&rpcURL, "rpc", "r", "https://mynano.ninja/api/node", "RPC endpoint URL")
 	rootCmd.PersistentFlags().StringVarP(&rpcWorkURL, "rpc-work", "s", "http://[::1]:7076", "RPC endpoint URL for work generation")
-	rootCmd.PersistentFlags().Uint32VarP(&walletAccountIndex, "account_index", "i", 0, "Index of the account within the wallet to use. Not all operations support it yet")	
+	rootCmd.PersistentFlags().IntVarP(&walletAccountIndex, "account_index", "i", -1, "Index of the account within the wallet to use. Not all operations support it yet")	
 }
 
 // initConfig reads in config file and ENV variables if set.
