@@ -21,7 +21,7 @@ var addCmd = &cobra.Command{
 			var a *wallet.Account
 			var err error
 			if (walletAccountIndex >= 0) {
-				var index = uint32(walletAccountIndex)
+				index := uint32(walletAccountIndex)
 				a, err = wi.w.NewAccount(&index)
 				fatalIf(err)
 			} else {
