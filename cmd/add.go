@@ -19,12 +19,18 @@ var addCmd = &cobra.Command{
 			wi := wallets[walletIndex]
 			wi.init()
 			var a *wallet.Account
-			for {
-				var err error
-				a, err = wi.w.NewAccount(nil)
+			var err error
+			if (walletAccountIndex >= 0) {
+				index := uint32(walletAccountIndex)
+				a, err = wi.w.NewAccount(&index)
 				fatalIf(err)
-				if _, ok := wi.Accounts[a.Address()]; !ok {
-					break
+			} else {
+				for {
+					a, err = wi.w.NewAccount(nil)
+					fatalIf(err)
+					if _, ok := wi.Accounts[a.Address()]; !ok {
+						break
+					}
 				}
 			}
 			wi.Accounts[a.Address()] = a.Index()
