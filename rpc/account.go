@@ -170,6 +170,10 @@ func (c *Client) AccountsPending(accounts []string, count int64) (pending map[st
 	if err != nil {
 		return
 	}
+	var u struct{ Blocks string }
+	if err = json.Unmarshal(resp, &u); err == nil && u.Blocks == "" {
+		return
+	}
 	var v struct {
 		Blocks map[string]HashToPendingMap
 	}
