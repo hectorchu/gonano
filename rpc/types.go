@@ -126,6 +126,7 @@ type BlockInfo struct {
 	Confirmed      bool       `json:"confirmed,string"`
 	Contents       *Block     `json:"contents"`
 	Subtype        string     `json:"subtype"`
+	SourceAccount  string     `json:"source_account"`
 }
 
 // HexData represents generic hex data.
