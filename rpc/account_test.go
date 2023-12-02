@@ -13,7 +13,7 @@ import (
 const testAccount = "nano_1zcffp784drsmz4oksufxfjut1nb5yh6pg43a6h6bkos39zz19ed6a4r36ny"
 
 func getClient() *rpc.Client {
-	return &rpc.Client{URL: "https://mynano.ninja/api/node"}
+	return &rpc.Client{URL: "https://app.natrium.io/api"}
 }
 
 func assertEqualBig(t *testing.T, s string, z *big.Int) {

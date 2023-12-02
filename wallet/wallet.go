@@ -46,7 +46,7 @@ func newWallet(seed []byte) *Wallet {
 	return &Wallet{
 		seed:     seed,
 		accounts: make(map[string]*Account),
-		RPC:      rpc.Client{URL: "https://mynano.ninja/api/node"},
+		RPC:      rpc.Client{URL: "https://app.natrium.io/api"},
 		RPCWork:  rpc.Client{URL: "http://[::1]:7076"},
 		impl:     seedImpl{},
 	}
