@@ -6,14 +6,14 @@ import (
 )
 
 // AccountBalance returns how many RAW is owned and how many have not yet been received by account.
-func (c *Client) AccountBalance(account string) (balance, pending *RawAmount, err error) {
+func (c *Client) AccountBalance(account string) (balance, receivable *RawAmount, err error) {
 	resp, err := c.send(map[string]interface{}{"action": "account_balance", "account": account})
 	if err != nil {
 		return
 	}
-	var v struct{ Balance, Pending *RawAmount }
+	var v struct{ Balance, Receivable *RawAmount }
 	err = json.Unmarshal(resp, &v)
-	return v.Balance, v.Pending, err
+	return v.Balance, v.Receivable, err
 }
 
 // AccountBlockCount gets the number of blocks for a specific account.
@@ -75,7 +75,7 @@ func (c *Client) AccountInfo(account string) (info AccountInfo, err error) {
 		"account":        account,
 		"representative": true,
 		"weight":         true,
-		"pending":        true,
+		"receivable":     true,
 	})
 	if err != nil {
 		return
@@ -108,7 +108,7 @@ func (c *Client) AccountWeight(account string) (weight *RawAmount, err error) {
 
 // AccountBalance returns how many RAW is owned and how many have not yet been received.
 type AccountBalance struct {
-	Balance, Pending *RawAmount
+	Balance, Receivable *RawAmount
 }
 
 // AccountsBalances returns how many RAW is owned and how many have not yet been received by accounts list.
@@ -137,31 +137,31 @@ func (c *Client) AccountsFrontiers(accounts []string) (frontiers map[string]Bloc
 	return v.Frontiers, err
 }
 
-// AccountPending returns amount and source account.
-type AccountPending struct {
+// AccountReceivable returns amount and source account.
+type AccountReceivable struct {
 	Amount *RawAmount
 	Source string
 }
 
-// HashToPendingMap maps pending block hashes to amount and source account.
-type HashToPendingMap map[string]AccountPending
+// HashToReceivableMap maps receivable block hashes to amount and source account.
+type HashToReceivableMap map[string]AccountReceivable
 
 // UnmarshalJSON sets *h to a copy of data.
-func (h *HashToPendingMap) UnmarshalJSON(data []byte) (err error) {
+func (h *HashToReceivableMap) UnmarshalJSON(data []byte) (err error) {
 	var s string
 	if err = json.Unmarshal(data, &s); err == nil && s == "" {
 		return
 	}
-	var v map[string]AccountPending
+	var v map[string]AccountReceivable
 	err = json.Unmarshal(data, &v)
 	*h = v
 	return
 }
 
-// AccountsPending returns a list of pending block hashes with amount and source accounts.
-func (c *Client) AccountsPending(accounts []string, count int64) (pending map[string]HashToPendingMap, err error) {
+// AccountsReceivable returns a list of receivable block hashes with amount and source accounts.
+func (c *Client) AccountsReceivable(accounts []string, count int64) (receivable map[string]HashToReceivableMap, err error) {
 	resp, err := c.send(map[string]interface{}{
-		"action":                 "accounts_pending",
+		"action":                 "accounts_receivable",
 		"accounts":               accounts,
 		"count":                  count,
 		"include_only_confirmed": true,
@@ -175,7 +175,7 @@ func (c *Client) AccountsPending(accounts []string, count int64) (pending map[st
 		return
 	}
 	var v struct {
-		Blocks map[string]HashToPendingMap
+		Blocks map[string]HashToReceivableMap
 	}
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err
@@ -243,7 +243,7 @@ func (c *Client) Ledger(account string, count int64, modifiedSince time.Time) (a
 		"modified_since": modifiedSince.Unix(),
 		"representative": true,
 		"weight":         true,
-		"pending":        true,
+		"receivable":     true,
 	})
 	if err != nil {
 		return
@@ -280,4 +280,31 @@ func (c *Client) RepresentativesOnline() (representatives map[string]Representat
 	var v struct{ Representatives map[string]Representative }
 	err = json.Unmarshal(resp, &v)
 	return v.Representatives, err
+}
+
+// V23.0+ methods
+
+// Receivable returns a list of block hashes which have not yet been received by this account.
+func (c *Client) Receivable(account string, count int64, includeActive bool, threshold string) (receivable map[string]HashToReceivableMap, err error) {
+	resp, err := c.send(map[string]interface{}{
+		"action":                 "receivable",
+		"account":                account,
+		"count":                  count,
+		"include_only_confirmed": true, // it defaults to false for v22.0 and below
+		"source":                 true,
+		"include_active":         includeActive,
+		"threshold":              threshold,
+	})
+	if err != nil {
+		return
+	}
+	var u struct{ Blocks string }
+	if err = json.Unmarshal(resp, &u); err == nil && u.Blocks == "" {
+		return
+	}
+	var v struct {
+		Blocks map[string]HashToReceivableMap
+	}
+	err = json.Unmarshal(resp, &v)
+	return v.Blocks, err
 }

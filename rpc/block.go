@@ -43,7 +43,7 @@ func (c *Client) BlockCount() (cemented, count, unchecked uint64, err error) {
 
 // BlockInfo retrieves a json representation of a block.
 func (c *Client) BlockInfo(hash BlockHash) (info BlockInfo, err error) {
-	resp, err := c.send(map[string]interface{}{"action": "block_info", "json_block": true, "hash": hash, "source": true})
+	resp, err := c.send(map[string]interface{}{"action": "block_info", "json_block": true, "hash": hash})
 	if err != nil {
 		return
 	}

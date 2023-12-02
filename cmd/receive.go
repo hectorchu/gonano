@@ -6,7 +6,7 @@ import (
 
 var receiveCmd = &cobra.Command{
 	Use:   "receive",
-	Short: "Receive all pending amounts for a wallet or account",
+	Short: "Receive all receivable amounts for a wallet or account",
 	Run: func(cmd *cobra.Command, args []string) {
 		if walletAccount == "" {
 			checkWalletIndex()
@@ -16,10 +16,10 @@ var receiveCmd = &cobra.Command{
 				_, err := wi.w.NewAccount(&index)
 				fatalIf(err)
 			}
-			err := wi.w.ReceivePendings()
+			err := wi.w.ReceiveReceivables()
 			fatalIf(err)
 		} else {
-			err := getAccount().ReceivePendings()
+			err := getAccount().ReceiveReceivables()
 			fatalIf(err)
 		}
 	},
