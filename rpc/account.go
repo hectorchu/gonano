@@ -285,16 +285,26 @@ func (c *Client) RepresentativesOnline() (representatives map[string]Representat
 // V23.0+ methods
 
 // Receivable returns a list of block hashes which have not yet been received by this account.
-func (c *Client) Receivable(account string, count int64, includeActive bool, threshold string) (receivable map[string]HashToReceivableMap, err error) {
-	resp, err := c.send(map[string]interface{}{
+func (c *Client) Receivable(
+	account string, count int64, includeActive bool, threshold string,
+) (receivable HashToReceivableMap, err error) {
+	body := map[string]interface{}{
 		"action":                 "receivable",
 		"account":                account,
-		"count":                  count,
 		"include_only_confirmed": true, // it defaults to false for v22.0 and below
 		"source":                 true,
-		"include_active":         includeActive,
-		"threshold":              threshold,
-	})
+	}
+	if count != 0 {
+		body["count"] = count
+	}
+	// include_active defaults to false
+	if includeActive != false {
+		body["include_active"] = true
+	}
+	if threshold != "" {
+		body["threshold"] = threshold
+	}
+	resp, err := c.send(body)
 	if err != nil {
 		return
 	}
@@ -303,7 +313,7 @@ func (c *Client) Receivable(account string, count int64, includeActive bool, thr
 		return
 	}
 	var v struct {
-		Blocks map[string]HashToReceivableMap
+		Blocks HashToReceivableMap
 	}
 	err = json.Unmarshal(resp, &v)
 	return v.Blocks, err
