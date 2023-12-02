@@ -54,7 +54,7 @@ type AccountInfo struct {
 	AccountVersion             uint64     `json:"account_version,string"`
 	Representative             string     `json:"representative"`
 	Weight                     *RawAmount `json:"weight"`
-	Pending                    *RawAmount `json:"pending"`
+	Receivable                 *RawAmount `json:"receivable"`
 }
 
 // Block corresponds to the JSON representation of a block.

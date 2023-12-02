@@ -43,9 +43,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gonano.yaml)")
 	rootCmd.PersistentFlags().IntVarP(&walletIndex, "wallet", "w", -1, "Index of the wallet to use")
 	rootCmd.PersistentFlags().StringVarP(&walletAccount, "account", "a", "", "Account to operate on")
-	rootCmd.PersistentFlags().StringVarP(&rpcURL, "rpc", "r", "https://mynano.ninja/api/node", "RPC endpoint URL")
+	rootCmd.PersistentFlags().StringVarP(&rpcURL, "rpc", "r", "https://app.natrium.io/api", "RPC endpoint URL")
 	rootCmd.PersistentFlags().StringVarP(&rpcWorkURL, "rpc-work", "s", "http://[::1]:7076", "RPC endpoint URL for work generation")
-	rootCmd.PersistentFlags().IntVarP(&walletAccountIndex, "account-index", "i", -1, "Index of the account within the wallet to use. Not all operations support it yet")	
+	rootCmd.PersistentFlags().IntVarP(&walletAccountIndex, "account-index", "i", -1, "Index of the account within the wallet to use. Not all operations support it yet")
 }
 
 // initConfig reads in config file and ENV variables if set.

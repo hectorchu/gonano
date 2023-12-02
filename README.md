@@ -37,7 +37,7 @@ Sends an amount of Nano from one account to another. The source account (supplie
 
     gonano receive -w0
 
-Receives all pending amounts for wallet #0. To receive pending amounts for a single account,
+Receives all receivable amounts for wallet #0. To receive receivable amounts for a single account,
 
     gonano receive -a <account>
 
@@ -62,7 +62,7 @@ Main entrypoint to the package. The first function creates a wallet using a trad
 
     func (w *Wallet) ScanForAccounts() (err error)
 
-Scans the wallet for non-empty accounts, including not yet opened accounts with pending amounts.
+Scans the wallet for non-empty accounts, including not yet opened accounts with receivable amounts.
 
     func (w *Wallet) NewAccount(index *uint32) (a *Account, err error)
 
@@ -73,9 +73,9 @@ Creates a new account within the wallet. If `index` is non-`nil`, derives the ac
 
 Gets the account with the given `address`, or all the accounts known to the wallet.
 
-    func (w *Wallet) ReceivePendings() (err error)
+    func (w *Wallet) ReceiveReceivables() (err error)
 
-Receives all pending amounts to the wallet.
+Receives all receivable amounts to the wallet.
 
     func (a *Account) Address() string
 
@@ -85,17 +85,17 @@ Get the address of the account.
 
 Get the derivation index of the account.
 
-    func (a *Account) Balance() (balance, pending *big.Int, err error)
+    func (a *Account) Balance() (balance, receivable *big.Int, err error)
 
-Get the owned balance and pending balance of the account. Amounts are in raws.
+Get the owned balance and receivable balance of the account. Amounts are in raws.
 
     func (a *Account) Send(account string, amount *big.Int) (hash rpc.BlockHash, err error)
 
 Send `amount` Nano from this to another `account`. The block hash is returned.
 
-    func (a *Account) ReceivePendings() (err error)
+    func (a *Account) ReceiveReceivables() (err error)
 
-Receives all pending amounts to the account.
+Receives all receivable amounts to the account.
 
     func (a *Account) ChangeRep(representative string) (hash rpc.BlockHash, err error)
 
@@ -114,7 +114,7 @@ Create an RPC client with URL.
 
 Not all RPCs are supported. The following methods are available:
 
-    func (c *Client) AccountBalance(account string) (balance, pending *RawAmount, err error)
+    func (c *Client) AccountBalance(account string) (balance, receivable *RawAmount, err error)
     func (c *Client) AccountBlockCount(account string) (blockCount uint64, err error)
     func (c *Client) AccountHistory(account string, count int64, head BlockHash) (history []AccountHistory, previous BlockHash, err error)
     func (c *Client) AccountHistoryRaw(account string, count int64, head BlockHash) (history []AccountHistoryRaw, previous BlockHash, err error)
@@ -123,7 +123,7 @@ Not all RPCs are supported. The following methods are available:
     func (c *Client) AccountWeight(account string) (weight *RawAmount, err error)
     func (c *Client) AccountsBalances(accounts []string) (balances map[string]*AccountBalance, err error)
     func (c *Client) AccountsFrontiers(accounts []string) (frontiers map[string]BlockHash, err error)
-    func (c *Client) AccountsPending(accounts []string, count int64) (pending map[string]HashToPendingMap, err error)
+    func (c *Client) AccountsReceivable(accounts []string, count int64) (receivable map[string]HashToReceivableMap, err error)
     func (c *Client) AvailableSupply() (available *RawAmount, err error)
     func (c *Client) BlockAccount(hash BlockHash) (account string, err error)
     func (c *Client) BlockConfirm(hash BlockHash) (started bool, err error)

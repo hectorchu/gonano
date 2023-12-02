@@ -46,7 +46,7 @@ func newWallet(seed []byte) *Wallet {
 	return &Wallet{
 		seed:     seed,
 		accounts: make(map[string]*Account),
-		RPC:      rpc.Client{URL: "https://mynano.ninja/api/node"},
+		RPC:      rpc.Client{URL: "https://app.natrium.io/api"},
 		RPCWork:  rpc.Client{URL: "http://[::1]:7076"},
 		impl:     seedImpl{},
 	}
@@ -72,7 +72,7 @@ func (w *Wallet) ScanForAccounts() (err error) {
 	}
 	i := len(accounts) - 1
 	for ; i >= 0; i-- {
-		if balances[accounts[i]].Pending.Sign() > 0 {
+		if balances[accounts[i]].Receivable.Sign() > 0 {
 			break
 		}
 		if frontiers[accounts[i]] != nil {
@@ -125,18 +125,18 @@ func (w *Wallet) GetAccounts() (accounts []*Account) {
 	return
 }
 
-// ReceivePendings pockets all pending amounts.
-func (w *Wallet) ReceivePendings() (err error) {
+// ReceiveReceivables pockets all receivable amounts.
+func (w *Wallet) ReceiveReceivables() (err error) {
 	accounts := make([]string, 0, len(w.accounts))
 	for address := range w.accounts {
 		accounts = append(accounts, address)
 	}
-	pendings, err := w.RPC.AccountsPending(accounts, -1)
+	receivables, err := w.RPC.AccountsReceivable(accounts, -1)
 	if err != nil {
 		return
 	}
-	for account, pendings := range pendings {
-		if err = w.accounts[account].receivePendings(pendings); err != nil {
+	for account, receivables := range receivables {
+		if err = w.accounts[account].receiveReceivables(receivables); err != nil {
 			return
 		}
 	}

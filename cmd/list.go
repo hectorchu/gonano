@@ -38,35 +38,35 @@ var listCmd = &cobra.Command{
 				accounts = append(accounts, address)
 			}
 			sort.Strings(accounts)
-			var balanceSum, pendingSum big.Int
+			var balanceSum, receivableSum big.Int
 			for _, address := range accounts {
-				balance, pending := getBalanceAndPrint(address)
+				balance, receivable := getBalanceAndPrint(address)
 				balanceSum.Add(&balanceSum, &balance.Int)
-				pendingSum.Add(&pendingSum, &pending.Int)
+				receivableSum.Add(&receivableSum, &receivable.Int)
 			}
 			if len(accounts) > 1 {
 				fmt.Print(strings.Repeat(" ", 61), "Sum:")
-				printAmounts(&balanceSum, &pendingSum)
+				printAmounts(&balanceSum, &receivableSum)
 			}
 		}
 	},
 }
 
-func getBalanceAndPrint(account string) (balance, pending *rpc.RawAmount) {
+func getBalanceAndPrint(account string) (balance, receivable *rpc.RawAmount) {
 	rpcClient := rpc.Client{URL: rpcURL}
-	balance, pending, err := rpcClient.AccountBalance(account)
+	balance, receivable, err := rpcClient.AccountBalance(account)
 	fatalIf(err)
 	fmt.Print(account)
-	printAmounts(&balance.Int, &pending.Int)
-	return balance, pending
+	printAmounts(&balance.Int, &receivable.Int)
+	return balance, receivable
 }
 
-func printAmounts(balance, pending *big.Int) {
+func printAmounts(balance, receivable *big.Int) {
 	if balance.Sign() > 0 {
 		fmt.Printf(" %s", util.NanoAmount{Raw: balance})
 	}
-	if pending.Sign() > 0 {
-		fmt.Printf(" (+ %s pending)", util.NanoAmount{Raw: pending})
+	if receivable.Sign() > 0 {
+		fmt.Printf(" (+ %s receivable)", util.NanoAmount{Raw: receivable})
 	}
 	fmt.Println()
 }

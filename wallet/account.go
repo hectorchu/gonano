@@ -28,8 +28,8 @@ func (a *Account) Index() uint32 {
 	return a.index
 }
 
-// Balance gets the confirmed and pending balances for account.
-func (a *Account) Balance() (balance, pending *big.Int, err error) {
+// Balance gets the confirmed and receivable balances for account.
+func (a *Account) Balance() (balance, receivable *big.Int, err error) {
 	b, p, err := a.w.RPC.AccountBalance(a.address)
 	if err != nil {
 		return
@@ -76,17 +76,17 @@ func (a *Account) SendBlock(account string, amount *big.Int) (block *rpc.Block, 
 	return block, a.w.impl.signBlock(a, block)
 }
 
-// ReceivePendings pockets all pending amounts.
-func (a *Account) ReceivePendings() (err error) {
-	pendings, err := a.w.RPC.AccountsPending([]string{a.address}, -1)
+// ReceiveReceivables pockets all receivable amounts.
+func (a *Account) ReceiveReceivables() (err error) {
+	receivables, err := a.w.RPC.AccountsReceivable([]string{a.address}, -1)
 	if err != nil {
 		return
 	}
-	return a.receivePendings(pendings[a.address])
+	return a.receiveReceivables(receivables[a.address])
 }
 
-// ReceivePending pockets the specified link block.
-func (a *Account) ReceivePending(link rpc.BlockHash) (hash rpc.BlockHash, err error) {
+// ReceiveReceivable pockets the specified link block.
+func (a *Account) ReceiveReceivable(link rpc.BlockHash) (hash rpc.BlockHash, err error) {
 	info, err := a.w.RPC.AccountInfo(a.address)
 	if err != nil {
 		info.Balance = &rpc.RawAmount{}
@@ -96,31 +96,31 @@ func (a *Account) ReceivePending(link rpc.BlockHash) (hash rpc.BlockHash, err er
 		return
 	}
 	info.Balance.Add(&info.Balance.Int, &block.Amount.Int)
-	return a.receivePending(info, link)
+	return a.receiveReceivable(info, link)
 }
 
-func (a *Account) receivePendings(pendings rpc.HashToPendingMap) (err error) {
-	if len(pendings) == 0 {
+func (a *Account) receiveReceivables(receivables rpc.HashToReceivableMap) (err error) {
+	if len(receivables) == 0 {
 		return
 	}
 	info, err := a.w.RPC.AccountInfo(a.address)
 	if err != nil {
 		info.Balance = &rpc.RawAmount{}
 	}
-	for hash, pending := range pendings {
+	for hash, receivable := range receivables {
 		var link rpc.BlockHash
 		if link, err = hex.DecodeString(hash); err != nil {
 			return
 		}
-		info.Balance.Add(&info.Balance.Int, &pending.Amount.Int)
-		if info.Frontier, err = a.receivePending(info, link); err != nil {
+		info.Balance.Add(&info.Balance.Int, &receivable.Amount.Int)
+		if info.Frontier, err = a.receiveReceivable(info, link); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func (a *Account) receivePending(info rpc.AccountInfo, link rpc.BlockHash) (hash rpc.BlockHash, err error) {
+func (a *Account) receiveReceivable(info rpc.AccountInfo, link rpc.BlockHash) (hash rpc.BlockHash, err error) {
 	workHash := info.Frontier
 	if info.Frontier == nil {
 		info.Frontier = make(rpc.BlockHash, 32)

@@ -13,7 +13,7 @@ import (
 const testAccount = "nano_1zcffp784drsmz4oksufxfjut1nb5yh6pg43a6h6bkos39zz19ed6a4r36ny"
 
 func getClient() *rpc.Client {
-	return &rpc.Client{URL: "https://mynano.ninja/api/node"}
+	return &rpc.Client{URL: "https://app.natrium.io/api"}
 }
 
 func assertEqualBig(t *testing.T, s string, z *big.Int) {
@@ -28,10 +28,10 @@ func assertEqualBytes(t *testing.T, s string, b []byte) {
 }
 
 func TestAccountBalance(t *testing.T) {
-	balance, pending, err := getClient().AccountBalance(testAccount)
+	balance, receivable, err := getClient().AccountBalance(testAccount)
 	require.Nil(t, err)
 	assertEqualBig(t, "134000000000000000000000000", &balance.Int)
-	assertEqualBig(t, "0", &pending.Int)
+	assertEqualBig(t, "0", &receivable.Int)
 }
 
 func TestAccountHistory(t *testing.T) {
@@ -100,7 +100,7 @@ func TestAccountsBalances(t *testing.T) {
 	require.Nil(t, err)
 	require.Len(t, balances, 1)
 	assertEqualBig(t, "134000000000000000000000000", &balances[testAccount].Balance.Int)
-	assertEqualBig(t, "0", &balances[testAccount].Pending.Int)
+	assertEqualBig(t, "0", &balances[testAccount].Receivable.Int)
 }
 
 func TestAccountsFrontiers(t *testing.T) {
@@ -110,16 +110,16 @@ func TestAccountsFrontiers(t *testing.T) {
 	assertEqualBytes(t, "8C1B5D4BBE27F05C7A888D1E691A07C550A81AFEE16D913EE21E1093888B82FD", frontiers[testAccount])
 }
 
-func TestAccountsPending(t *testing.T) {
-	pendings, err := getClient().AccountsPending([]string{
+func TestAccountsReceivable(t *testing.T) {
+	receivables, err := getClient().AccountsReceivable([]string{
 		testAccount, "nano_159m8t4iedstzcaacikb9hdkhbcxcqzfbw56dutay8ceqagq9wxpsk9ftfq9"}, 1)
 	require.Nil(t, err)
-	require.Len(t, pendings, 1)
-	blocks := pendings["nano_159m8t4iedstzcaacikb9hdkhbcxcqzfbw56dutay8ceqagq9wxpsk9ftfq9"]
+	require.Len(t, receivables, 1)
+	blocks := receivables["nano_159m8t4iedstzcaacikb9hdkhbcxcqzfbw56dutay8ceqagq9wxpsk9ftfq9"]
 	require.Len(t, blocks, 1)
-	pending := blocks["96D8422D1CB676EF1B62A313865626A7725C3B9BB5B875601A1460ACF30B5322"]
-	assertEqualBig(t, "123000000000000000000000000", &pending.Amount.Int)
-	assert.Equal(t, "nano_3kwppxjcggzs65fjh771ch6dbuic3xthsn5wsg6i5537jacw7m493ra8574x", pending.Source)
+	receivable := blocks["96D8422D1CB676EF1B62A313865626A7725C3B9BB5B875601A1460ACF30B5322"]
+	assertEqualBig(t, "123000000000000000000000000", &receivable.Amount.Int)
+	assert.Equal(t, "nano_3kwppxjcggzs65fjh771ch6dbuic3xthsn5wsg6i5537jacw7m493ra8574x", receivable.Source)
 }
 
 func TestFrontierCount(t *testing.T) {
